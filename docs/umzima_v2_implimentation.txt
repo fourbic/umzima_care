@@ -1,0 +1,192 @@
+{
+  "implementationPlan": {
+    "projectName": "Umzima v2 - MVP Pilot",
+    "goal": "To deploy a Minimum Viable Product (MVP) of Umzima v2, built on OpenMRS, to a selected pilot clinic(s) for real-world testing, feedback collection, and validation of core functionalities.",
+    "mvpScopeRecap": [
+      "User Login/Logout with Role-Based Access",
+      "Digital Patient Registration & Profile Viewing (Simplified)",
+      "Digital Appointment Scheduling & Calendar View (Leveraging OpenMRS Module)",
+      "Basic Clinical Consultation Note Recording (Simplified HTML Form)",
+      "Patient Visit History Viewing",
+      "Automated SMS Appointment Reminders (Basic)",
+      "Basic Clinic Operations Dashboard (Admin view)",
+      "Patient Search Functionality"
+    ],
+    "assumptions": [
+      "A dedicated technical team (OpenMRS implementer, developer(s), sysadmin) is available.",
+      "A clinical lead/product owner is actively involved for requirements and feedback.",
+      "Pilot clinic(s) have been identified and are willing to participate.",
+      "Basic infrastructure (computers, internet for sync/admin, reliable power) is available at the pilot clinic(s).",
+      "Budget for SMS gateway integration is allocated."
+    ],
+    "phases": [
+      {
+        "phaseNumber": 0,
+        "phaseName": "Preparation & Foundation Setup",
+        "duration": "2-4 Weeks",
+        "keyActivities": [
+          "Finalize detailed MVP requirements and user stories.",
+          "Set up development, staging, and (basic) pilot production environments for OpenMRS.",
+          "Install OpenMRS Reference Application (latest stable version).",
+          "Install and configure essential OpenMRS modules: HTML Form Entry, Appointment Scheduling, Reporting (and dependencies).",
+          "**Crucial: Define and implement the core Concept Dictionary for Umzima MVP** (Patient demographics, PHC diagnoses, common PHC complaints, vital signs, basic medications if structured). This requires significant clinical input.",
+          "Set up version control (Git) and project management tools (Jira, Trello, etc.).",
+          "Team orientation and basic OpenMRS training if needed."
+        ],
+        "deliverables": [
+          "Documented MVP user stories.",
+          "Functional OpenMRS instances (Dev, Staging, Pilot-Prod).",
+          "Initial Umzima Concept Dictionary implemented in OpenMRS.",
+          "Project management and code repositories set up."
+        ],
+        "responsible": ["Project Lead", "OpenMRS Implementer", "SysAdmin", "Clinical Lead"]
+      },
+      {
+        "phaseNumber": 1,
+        "phaseName": "Core Patient Management Development",
+        "duration": "3-5 Weeks",
+        "keyActivities": [
+          "Develop/Customize simplified Patient Registration form using HTML Form Entry (HFE) based on Umzima's defined fields.",
+          "Configure OpenMRS Patient Dashboard to display core Umzima profile information clearly.",
+          "Ensure robust patient search functionality is accessible and meets clinic needs.",
+          "Implement basic user roles (Admin, Doctor, Nurse) in OpenMRS and define initial privileges related to patient data access and registration."
+        ],
+        "deliverables": [
+          "Functional patient registration workflow.",
+          "Patient profile view with demographics and basic history placeholder.",
+          "Tested patient search.",
+          "Initial user roles configured."
+        ],
+        "responsible": ["OpenMRS Developer", "Clinical Lead (for form design)"]
+      },
+      {
+        "phaseNumber": 2,
+        "phaseName": "Clinical Encounter & Appointment Module Integration",
+        "duration": "4-6 Weeks",
+        "keyActivities": [
+          "Develop simplified Consultation Note form using HFE (vitals, complaint, diagnosis from concept set, brief plan/medication notes).",
+          "Configure encounter types for PHC consultations.",
+          "Integrate consultation notes into the patient visit history view on the patient dashboard.",
+          "Configure the OpenMRS Appointment Scheduling Module: define appointment types (e.g., 'New Consultation', 'Follow-up'), provider schedules, locations.",
+          "Develop/Customize a simplified UI (e.g., as an OWA or OpenMRS 3.x component) for clinic staff to book and view daily/weekly appointments."
+        ],
+        "deliverables": [
+          "Functional consultation note recording.",
+          "Viewable patient visit history with consultation summaries.",
+          "Configured appointment scheduling system.",
+          "Basic UI for appointment booking and viewing."
+        ],
+        "responsible": ["OpenMRS Developer", "Clinical Lead (for form/workflow design)"]
+      },
+      {
+        "phaseNumber": 3,
+        "phaseName": "Communication & Basic Dashboard Development",
+        "duration": "3-4 Weeks",
+        "keyActivities": [
+          "Develop a custom OpenMRS module for SMS integration.",
+          "Integrate with a chosen SMS Gateway API (e.g., Twilio, Africa's Talking).",
+          "Implement logic for automated appointment reminders (e.g., 24 hours prior).",
+          "Design and develop a basic Clinic Operations Dashboard (e.g., as an OWA) for Admins, showing: # appointments today, # patients registered today, # appointments for the week. (Utilize Reporting module for data feeds)."
+        ],
+        "deliverables": [
+          "Functional automated SMS appointment reminders.",
+          "Basic clinic operations dashboard view.",
+          "Documentation for SMS gateway setup."
+        ],
+        "responsible": ["OpenMRS Developer", "Backend Developer (if API heavy)"]
+      },
+      {
+        "phaseNumber": 4,
+        "phaseName": "System Testing & Refinement",
+        "duration": "2-3 Weeks",
+        "keyActivities": [
+          "Comprehensive end-to-end testing of all MVP user flows.",
+          "User Acceptance Testing (UAT) with selected clinic staff (can be from pilot clinic or similar users).",
+          "Bug fixing and performance optimization based on testing and UAT feedback.",
+          "Finalize role-based access controls and privileges for all MVP features.",
+          "Prepare basic user training materials (simple guides, cheat sheets)."
+        ],
+        "deliverables": [
+          "Test plans and UAT reports.",
+          "Bug fix log.",
+          "Stabilized MVP build.",
+          "Draft user training materials.",
+          "Finalized security and access configurations."
+        ],
+        "responsible": ["QA/Tester", "OpenMRS Developer", "Clinical Lead", "Pilot Clinic Staff (for UAT)"]
+      },
+      {
+        "phaseNumber": 5,
+        "phaseName": "Pilot Deployment & Training",
+        "duration": "1-2 Weeks",
+        "keyActivities": [
+          "Prepare the pilot clinic(s) environment (hardware, network checks).",
+          "Deploy the finalized MVP build to the pilot production server.",
+          "Conduct on-site (or remote if necessary) training for all pilot clinic staff.",
+          "Create sample patient data or manage initial data entry for the pilot clinic if not starting completely fresh (unlikely for a pure MVP pilot).",
+          "Establish support channels for the pilot (e.g., dedicated contact person, simple ticketing system)."
+        ],
+        "deliverables": [
+          "Umzima v2 MVP deployed at pilot clinic(s).",
+          "Trained clinic staff.",
+          "Pilot support plan in place."
+        ],
+        "responsible": ["SysAdmin", "OpenMRS Implementer", "Training Lead", "Pilot Clinic Management"]
+      },
+      {
+        "phaseNumber": 6,
+        "phaseName": "Pilot Go-Live & Initial Monitoring",
+        "duration": "4-8 Weeks (Pilot Duration)",
+        "keyActivities": [
+          "Official start of the pilot using Umzima v2 for daily operations.",
+          "Closely monitor system performance, stability, and usage.",
+          "Provide active support to clinic staff, addressing issues promptly.",
+          "Collect regular feedback from users (e.g., weekly check-ins, feedback forms, observation).",
+          "Document bugs, usability issues, and feature requests identified during the pilot."
+        ],
+        "deliverables": [
+          "System operational at pilot site(s).",
+          "Ongoing support provided.",
+          "Initial feedback and issue log.",
+          "Pilot monitoring reports (usage statistics, system uptime)."
+        ],
+        "responsible": ["Support Team", "Clinical Lead", "Project Lead", "Pilot Clinic Staff"]
+      },
+      {
+        "phaseNumber": 7,
+        "phaseName": "Pilot Review & Next Steps Planning",
+        "duration": "1-2 Weeks (Post-Pilot Duration)",
+        "keyActivities": [
+          "Conduct a comprehensive review of the pilot: analyze feedback, system performance data, and impact on clinic workflows.",
+          "Identify key successes, challenges, and lessons learned.",
+          "Prioritize bug fixes and critical improvements for a post-pilot update.",
+          "Develop a roadmap for Umzima v2.1 based on pilot findings and original backlog."
+        ],
+        "deliverables": [
+          "Pilot evaluation report.",
+          "Prioritized list of post-pilot fixes and enhancements.",
+          "Roadmap for the next iteration of Umzima."
+        ],
+        "responsible": ["Project Lead", "Clinical Lead", "OpenMRS Implementer", "Key Stakeholders"]
+      }
+    ],
+    "keyConsiderationsDuringImplementation": [
+      "**Keep it MVP:** Strictly adhere to the defined MVP scope. Defer non-essential features.",
+      "**User-Centricity:** Continuously involve clinical and admin staff for feedback on UI/UX and workflow.",
+      "**OpenMRS Best Practices:** Follow OpenMRS development guidelines, especially for module development and concept management.",
+      "**Data Security and Privacy:** Implement OpenMRS security features rigorously. Comply with local data protection regulations.",
+      "**Simplicity in Training:** Training materials and sessions must be extremely simple and hands-on, considering potential digital literacy levels.",
+      "**Iterative Feedback Loops:** Implement short feedback cycles, especially during UAT and the early pilot phase.",
+      "**Documentation:** Maintain basic technical and user documentation throughout the process.",
+      "**Contingency Planning:** Have plans for dealing with potential technical issues or resistance to change at the pilot site."
+    ],
+    "pilotSuccessMetrics_MVP": [
+      "System uptime and stability.",
+      "Successful completion of core user flows by clinic staff (e.g., patient registration rate, appointments booked).",
+      "User satisfaction (qualitative feedback, simple surveys).",
+      "Reduction in time taken for core tasks (baseline comparison if possible, otherwise qualitative).",
+      "Successful sending of SMS appointment reminders and observed impact on no-show rates (if measurable).",
+      "Number of bugs/critical issues reported and resolution time."
+    ]
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "strategyDocument": {
+    "title": "Umzima v2 - Building on OpenMRS for Primary Health Care",
+    "introduction": "This document outlines the strategy and considerations for building Umzima v2, a Primary Health Care (PHC) system for small clinics, leveraging the OpenMRS platform. The goal is to utilize OpenMRS's robust, extensible EMR capabilities as the core backend, while potentially developing a simplified, tailored user experience (either through OpenMRS modules or a custom frontend) to meet Umzima's specific MVP requirements and health equity goals.",
+    "whyOpenMRS": [
+      "Robust Data Model: OpenMRS has a concept-based data model designed for healthcare, allowing flexibility and standardization.",
+      "Extensibility: Its modular architecture allows for adding custom functionality without altering the core.",
+      "Community & Ecosystem: Large, active global community, numerous existing modules, and widespread use in resource-constrained settings.",
+      "APIs: Provides RESTful APIs for integration with other systems or custom frontends.",
+      "Interoperability Standards: Supports (or can be extended to support) standards like HL7 FHIR.",
+      "Open Source: Reduces licensing costs and allows for full customization."
+    ],
+    "setupAndPrerequisites": {
+      "teamComposition": [
+        {
+          "role": "OpenMRS Implementer/Developer",
+          "skills": "Java, Spring, Hibernate (for module development), OpenMRS architecture, data model, module development, REST APIs. Familiarity with front-end technologies if building custom UI within modules (e.g., Angular, React components with OpenMRS SDK).",
+          "responsibility": "Setting up OpenMRS, configuring modules, developing custom Umzima-specific modules, API integrations."
+        },
+        {
+          "role": "Frontend Developer (Optional but Recommended for Umzima's UX goals)",
+          "skills": "JavaScript frameworks (React, Vue, Angular), HTML, CSS, API consumption.",
+          "responsibility": "Developing a simplified user interface that interacts with the OpenMRS backend via APIs, if a separate frontend approach is chosen."
+        },
+        {
+          "role": "Backend Developer (If significant custom logic beyond standard OpenMRS modules is needed)",
+          "skills": "Java, Spring, REST API development.",
+          "responsibility": "Developing custom backend services or extending OpenMRS APIs if needed."
+        },
+        {
+          "role": "DevOps/System Administrator",
+          "skills": "Server management (Linux), database administration (MySQL), Docker, CI/CD, security.",
+          "responsibility": "Setting up development, staging, and production environments; managing OpenMRS instances, backups, and security."
+        },
+        {
+          "role": "QA/Tester",
+          "skills": "Manual and automated testing, understanding of healthcare workflows.",
+          "responsibility": "Ensuring the system meets requirements and is bug-free."
+        },
+        {
+          "role": "Clinical Informatics Lead/Product Owner",
+          "skills": "Understanding of PHC workflows, Umzima's MVP requirements, user needs.",
+          "responsibility": "Defining requirements, guiding development priorities, ensuring clinical validity."
+        }
+      ],
+      "technicalEnvironment": [
+        "Development Machines: Standard development setup with Java JDK, Maven, IDE (IntelliJ/Eclipse), Git.",
+        "OpenMRS Instance: Install OpenMRS Reference Application or a chosen distribution. For Umzima, starting with the Reference Application provides many useful modules out-of-the-box.",
+        "Database: MySQL (standard for OpenMRS).",
+        "Server: Tomcat or similar servlet container.",
+        "Version Control: Git (e.g., GitHub, GitLab).",
+        "Communication/Collaboration Tools: Slack, Jira, Confluence, etc."
+      ],
+      "infrastructureConsiderations": [
+        "Local Development: Each developer should have a local OpenMRS instance.",
+        "Staging/Testing Environment: A shared environment that mimics production for testing.",
+        "Production Environment: Secure, reliable hosting. Consider cloud (AWS, Azure, Google Cloud) or on-premise depending on clinic network capacity and connectivity. For small clinics, a simplified, managed hosting solution or a pre-configured appliance could be beneficial.",
+        "Connectivity: Design for potentially low-bandwidth environments if target clinics are in such areas. SMS integrations will be crucial where internet is unreliable."
+      ]
+    },
+    "developmentApproachOptions": [
+      {
+        "approachName": "OpenMRS Modular Development",
+        "description": "Develop Umzima features as custom OpenMRS modules. This approach keeps everything within the OpenMRS framework, leveraging its UI components (e.g., GSPs, potentially newer SPA-style UIs with OpenMRS 3.x framework) or building custom UI within modules.",
+        "pros": [
+          "Tighter integration with OpenMRS core.",
+          "Leverages existing OpenMRS UI components and conventions.",
+          "Easier to manage as a single system.",
+          "Community contribution possibilities."
+        ],
+        "cons": [
+          "Steeper learning curve for OpenMRS module development if team is new to it.",
+          "UI customization might be constrained by OpenMRS framework, though OpenMRS 3.x offers more flexibility with microfrontends.",
+          "Requires Java/Spring expertise."
+        ]
+      },
+      {
+        "approachName": "Headless OpenMRS with Custom Frontend",
+        "description": "Use OpenMRS purely as a backend EMR and data store. Develop a separate, custom web (or mobile) application for Umzima that communicates with OpenMRS via its REST APIs.",
+        "pros": [
+          "Complete UI/UX flexibility to create a highly simplified and tailored experience for Umzima.",
+          "Can use modern frontend frameworks familiar to web developers.",
+          "Decouples frontend from backend, allowing independent development cycles."
+        ],
+        "cons": [
+          "Requires building a full frontend from scratch.",
+          "More complex to manage two separate systems (frontend and backend).",
+          "Relies heavily on the completeness and stability of OpenMRS REST APIs for all needed functions.",
+          "Potential for duplicated logic if not carefully designed."
+        ]
+      },
+      {
+        "approachName": "Hybrid Approach (Recommended for Umzima)",
+        "description": "Leverage existing OpenMRS modules where possible (e.g., appointment scheduling, reporting with minor UI tweaks). Develop custom modules for core Umzima workflows that need significant simplification or specific logic (e.g., a streamlined patient registration form, a simplified consultation note template using HTML Form Entry or an OWA). For the overall user experience, especially dashboards, consider creating Open Web Apps (OWAs) or utilizing the OpenMRS 3.x microfrontend architecture for a more tailored UI while still being integrated.",
+        "pros": [
+          "Balances customization needs with leveraging existing functionalities.",
+          "Can provide a simplified UX without building an entirely separate frontend.",
+          "Reduces development effort compared to a full custom frontend.",
+          "Maintains good integration with the OpenMRS ecosystem."
+        ],
+        "cons": [
+          "Requires careful planning to decide what to customize vs. build new.",
+          "Still needs OpenMRS development expertise."
+        ]
+      }
+    ],
+    "mappingUmzimaMVPtoOpenMRS": [
+      {
+        "umzimaFeature": "User Login/Logout",
+        "openMRSImplementation": "Core OpenMRS authentication and user/role management. Configure roles (Doctor, Nurse, Admin) with appropriate privileges."
+      },
+      {
+        "umzimaFeature": "Patient Registration (Digital)",
+        "openMRSImplementation": "Core OpenMRS patient registration. Customize patient registration form fields to match Umzima's simplified requirements. Could be done via Administration UI or a simple custom module/OWA for a more tailored flow. Ensure Unique Patient ID generation (OpenMRS handles this)."
+      },
+      {
+        "umzimaFeature": "Appointment Scheduling (Digital)",
+        "openMRSImplementation": "Utilize the OpenMRS Appointment Scheduling Module. Configure appointment types, services, and provider schedules. May require UI simplification through a custom OWA or by tailoring the existing module's UI if possible."
+      },
+      {
+        "umzimaFeature": "View Appointments Dashboard/Calendar",
+        "openMRSImplementation": "The Appointment Scheduling Module provides views. A custom dashboard OWA might be needed for the specific summarized views Umzima requires for different roles."
+      },
+      {
+        "umzimaFeature": "Record Basic Consultation Details",
+        "openMRSImplementation": "Use OpenMRS Encounters and Observations. Design simplified HTML Forms using the HTML Form Entry module for structured data capture (Vitals, Chief Complaint, Diagnosis using Concept Dictionary, Treatment/Prescription). Configure appropriate Encounter Types."
+      },
+      {
+        "umzimaFeature": "View Patient Profile and History",
+        "openMRSImplementation": "Core OpenMRS patient dashboard/chart. This inherently shows demographics and visit history (encounters). Customize the display order or summary views if needed, potentially via an OWA or configuring the RefApp patient dashboard."
+      },
+      {
+        "umzimaFeature": "Automated SMS Appointment Reminders",
+        "openMRSImplementation": "This requires a custom module or integration. The module would query upcoming appointments (from Appointment Scheduling module) and use a third-party SMS Gateway API (e.g., Twilio, Africa's Talking) to send reminders. Store patient consent for SMS."
+      },
+      {
+        "umzimaFeature": "View Basic Clinic Dashboard",
+        "openMRSImplementation": "Use the OpenMRS Reporting Module for data extraction. A custom OWA or dashboard page would be needed to display these metrics (appointments, patients seen) in a simplified format. OpenMRS 3.x framework supports building custom dashboard widgets."
+      },
+      {
+        "umzimaFeature": "Patient Search Functionality",
+        "openMRSImplementation": "Core OpenMRS patient search capabilities. Ensure it's easily accessible."
+      }
+    ],
+    "customDevelopmentHighlights": [
+      "Simplified UI/UX Layer: Whether through OWAs, OpenMRS 3.x microfrontends, or custom module UIs, a key task is to simplify the user experience for clinic staff compared to a default OpenMRS installation.",
+      "Streamlined Forms: Create concise HTML Forms for patient registration and consultation notes, focusing on Umzima's MVP data points.",
+      "SMS Integration Module: Develop a module to handle automated appointment reminders and potentially basic patient messaging.",
+      "Custom Dashboards: Develop role-specific dashboards summarizing key information and providing quick access to tasks.",
+      "Concept Dictionary Management: Carefully define and manage concepts for diagnoses, symptoms, medications (if structured for MVP) to ensure data consistency. This is crucial for OpenMRS."
+    ],
+    "keyOpenMRSConceptsToLeverage": [
+      "Patient: Core entity for storing patient demographic data.",
+      "Encounter: Represents a patient visit or interaction. Configure encounter types (e.g., 'PHC Consultation', 'Registration').",
+      "Observation (Obs): Stores clinical data points (vitals, diagnosis, symptoms) linked to concepts.",
+      "Concept Dictionary: The heart of OpenMRS. Defines all medical terms used. Crucial for structured data capture and interoperability. Umzima will need a core set of PHC concepts.",
+      "HTML Form Entry (HFE): Module for creating structured data entry forms.",
+      "Appointment Scheduling Module: For managing appointments.",
+      "Reporting Module: For extracting data for dashboards and reports.",
+      "Open Web Apps (OWA) / Microfrontends (OpenMRS 3.x): For building custom user interfaces integrated within OpenMRS.",
+      "User, Role, Privilege: For security and access control.",
+      "Location: To manage clinic sites if Umzima is used across multiple locations."
+    ],
+    "integrationPoints": [
+      {
+        "system": "SMS Gateway",
+        "purpose": "Appointment reminders, basic patient communication.",
+        "method": "API integration from a custom OpenMRS module."
+      },
+      {
+        "system": "National Health Identifiers (Future)",
+        "purpose": "Unique patient identification across systems.",
+        "method": "API integration, or configuring OpenMRS patient identifier types."
+      },
+      {
+        "system": "Lab/Radiology Systems (Future)",
+        "purpose": "Receiving results directly into patient records.",
+        "method": "HL7, FHIR, or custom API integrations."
+      }
+    ],
+    "deploymentAndMaintenance": [
+      "Packaging: Consider creating an Umzima-specific OpenMRS distribution (a package of core OpenMRS + Umzima modules + configurations) for easier deployment in small clinics.",
+      "Updates: Plan for OpenMRS core updates and module updates. This can be complex.",
+      "Support: Establish a support mechanism for clinics using Umzima.",
+      "Training: Develop simple training materials tailored to the Umzima UI and workflows.",
+      "Data Backup and Recovery: Critical for any EMR system."
+    ],
+    "healthEquityAndAccessibilityOnOpenMRS": [
+      "Simplified Forms: Leverage HFE to create forms that are easy to understand and complete, minimizing data entry burden.",
+      "SMS for Communication: Prioritize SMS for reminders and basic communication to reach patients with limited internet access.",
+      "Language Support: OpenMRS supports multiple languages. Plan for translation of Umzima-specific UI elements and concepts if catering to multilingual populations (post-MVP).",
+      "Offline Capabilities (Advanced/Future): While complex, explore OpenMRS-compatible offline solutions (e.g., for community health workers) if connectivity is a major barrier in target areas.",
+      "Low-Literacy Considerations: Use icons and clear visual cues in the UI. Ensure any patient-facing SMS messages are simple and direct."
+    ],
+    "stepsToGetStarted": [
+      "1. Deep Dive into OpenMRS: Team members should familiarize themselves with OpenMRS architecture, data model, and module development (if taking that route). Attend OpenMRS community calls, review documentation.",
+      "2. Setup Development Environment: Each developer sets up a local OpenMRS instance.",
+      "3. Install Core Modules: Start with OpenMRS Reference Application and add/configure necessary modules (Appointment Scheduling, HFE, Reporting).",
+      "4. Define Concept Dictionary: Identify and create the core concepts Umzima will use. This is a foundational step.",
+      "5. Design Simplified Forms: Use HFE to create the patient registration and consultation note forms.",
+      "6. Develop UI/Workflow Layer: Start building the simplified dashboards and workflows as OWAs or OpenMRS 3.x components, or customize existing module UIs.",
+      "7. Develop SMS Integration Module: Begin work on the SMS reminder functionality.",
+      "8. Iterative Development & Testing: Build features incrementally, conduct regular testing, and gather feedback from representative users/clinics.",
+      "9. Engage with OpenMRS Community: Ask questions, share progress, and potentially contribute back Umzima-specific generic modules."
+    ],
+    "conclusion": "Building Umzima v2 on OpenMRS offers a powerful foundation to meet the PHC needs of small clinics. The key will be to effectively leverage OpenMRS's core strengths while strategically customizing and simplifying the user experience to align with Umzima's goals of ease of use, accessibility, and health equity. A hybrid development approach, focusing on simplified forms (HFE), targeted custom modules/OWAs for UI, and robust SMS integration, is recommended for the MVP."
+  }
+}

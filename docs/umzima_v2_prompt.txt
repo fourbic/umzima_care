@@ -1,0 +1,101 @@
+{
+  "llmPrompt": {
+    "persona": "You are an expert full-stack web developer specializing in creating modern, responsive, and accessible web applications, particularly for healthcare environments with considerations for resource constraints and varied digital literacy levels. You are proficient in React (or a similar modern JavaScript framework like Vue or Svelte), state management, API integration, and clean UI/UX design.",
+    "objective": "Generate the initial project scaffold (directory structure, key files, and basic component code) for the Umzima v2 web application MVP. This application will serve as a Primary Health Care (PHC) system for small clinics, interfacing with an OpenMRS backend.",
+    "projectDetails": {
+      "projectName": "Umzima",
+      "corePurpose": "A simplified, accessible digital system for core PHC operations for small clinics.",
+      "backendSystem": "OpenMRS (The web app will consume OpenMRS REST APIs for all data operations. No backend logic needs to be implemented in this scaffold).",
+      "targetUsers": ["Clinic Administrative Staff", "Nurses", "Doctors"],
+      "keyDesignPrinciples": [
+        "Simplicity and Ease of Use: Prioritize intuitive workflows and minimal clutter.",
+        "Accessibility: Design with good contrast and clear typography. Ensure navigation is straightforward.",
+        "Efficiency: Streamline common tasks.",
+        "Modularity: Structure components for maintainability and scalability."
+      ]
+    },
+    "technicalStackSuggestion": {
+      "frontendFramework": "React with Vite (for fast setup and development). Alternatively, suggest Next.js if server-side rendering or static site generation for some parts might be beneficial, or Vue.js if preferred.",
+      "styling": "Tailwind CSS for utility-first styling to ensure rapid UI development and consistency. Alternatively, CSS Modules or Styled Components.",
+      "stateManagement": "React Context API for simple state, or suggest Zustand/Jotai for more complex global state if anticipated (keep it minimal for MVP).",
+      "routing": "React Router.",
+      "apiClient": "Axios or Fetch API for OpenMRS API calls."
+    },
+    "branding": {
+      "colorPalette": [
+        {"name": "Primary Dark Blue (Backgrounds, Navigation)", "hex": "#020532"},
+        {"name": "Secondary Dark Blue (Accents, Darker UI elements)", "hex": "#030533"},
+        {"name": "Primary Bright Green (Buttons, CTAs, Highlights, Active States)", "hex": "#14E323"},
+        {"name": "Accent Green 1 (Secondary Highlights, Icons)", "hex": "#74E102"},
+        {"name": "Accent Green 2 (Subtle Highlights, Status Indicators)", "hex": "#7FE201"},
+        {"name": "Neutral White (Text on dark backgrounds, card backgrounds)", "hex": "#FFFFFF"},
+        {"name": "Light Gray (Borders, subtle dividers, disabled states)", "hex": "#E5E7EB"},
+        {"name": "Medium Gray (Secondary text, icons)", "hex": "#6B7280"},
+        {"name": "Error Red (Validation errors, alerts)", "hex": "#EF4444"}
+      ],
+      "logoDescription": "A stylized leaf, predominantly bright green (#14E323) with a dark blue (#020532 or #030533) outline. The name 'Umzima' should be displayed in a clean, sans-serif font (e.g., Inter, Nunito, Open Sans) using white or a light green on dark backgrounds.",
+      "fontSuggestion": "Inter or Nunito or Open Sans (for readability and modern feel)."
+    },
+    "mvpCoreFeaturesToScaffold": [
+      "User Authentication (Login Page, placeholder for auth logic)",
+      "Patient Registration (Form component)",
+      "Appointment Scheduling (Calendar interface placeholder, booking form component)",
+      "Basic Clinical Notes (Form component for consultation)",
+      "Patient Dashboard/Profile (Display patient info and visit history)",
+      "Daily/Weekly Appointment View (List or calendar view)",
+      "Clinic Operations Dashboard (Admin view with basic stats)"
+    ],
+    "deliverables": [
+      {
+        "item": "Directory Structure",
+        "description": "A recommended project directory structure (e.g., `src/components`, `src/pages`, `src/services`, `src/hooks`, `src/assets`, `src/styles`, `src/contexts` or `src/store`)."
+      },
+      {
+        "item": "Basic File Scaffolds",
+        "description": "Create placeholder files for the main components and pages related to the MVP features. Include basic HTML structure and minimal styling using the chosen styling approach and color palette."
+      },
+      {
+        "item": "Core Layout Components",
+        "description": [
+          "App.js (or equivalent main entry point) with routing setup.",
+          "AuthenticatedLayout.js: A wrapper for pages requiring login, including a simple sidebar navigation and a top bar.",
+          "SidebarNavigation.js: Links to Dashboard, Patients, Appointments, Settings (placeholder). Use logo and primary dark blue background.",
+          "TopBar.js: Display logged-in user (placeholder), logout button. Uses primary dark blue background."
+        ]
+      },
+      {
+        "item": "Example Page/Component Scaffolds",
+        "description": [
+          "LoginPage.js: Simple form with email/password fields and login button. Style with primary green for the button.",
+          "DashboardPage.js (Admin): Placeholder for basic clinic stats (e.g., 'Appointments Today', 'New Patients').",
+          "PatientListPage.js: Placeholder for a table/list of patients with a search bar and 'Add Patient' button.",
+          "PatientRegistrationForm.js: Component with fields for core demographic data.",
+          "AppointmentCalendarPage.js: Placeholder for a calendar view and an 'Add Appointment' button.",
+          "ConsultationNoteForm.js: Component for capturing basic clinical notes."
+        ]
+      },
+      {
+        "item": "Styling Setup",
+        "description": "Basic global styles (e.g., `index.css` or `global.css`) setting the suggested font and any base styling. If Tailwind CSS is chosen, include the `tailwind.config.js` with the color palette integrated."
+      },
+      {
+        "item": "API Service Placeholder",
+        "description": "A `services/api.js` or `services/openMRSAPI.js` file with placeholder functions for common OpenMRS interactions (e.g., `loginUser()`, `registerPatient()`, `getAppointments()`, `saveConsultation()`). These functions should indicate they will use Axios/Fetch to call OpenMRS REST endpoints."
+      },
+      {
+        "item": "Basic README.md",
+        "description": "Instructions on how to set up and run the project locally."
+      }
+    ],
+    "specificInstructionsAndConstraints": [
+      "Focus on structure, basic UI elements, and component organization. Do not implement complex logic or actual API calls.",
+      "All API calls should be clearly marked as placeholders pointing to an OpenMRS backend.",
+      "Ensure the color palette is used consistently for backgrounds, text, buttons, and active/highlight states.",
+      "The UI should be clean, uncluttered, and responsive (basic responsiveness for mobile/tablet).",
+      "Generate code snippets for each key file.",
+      "Provide explanations for the chosen directory structure and any key decisions.",
+      "The scaffold should be runnable (e.g., `npm run dev` or `yarn dev` should start a development server and display the basic layout)."
+    ],
+    "requestForClarification": "If a specific frontend framework or styling library is preferred over the suggestions, please specify. Otherwise, proceed with React and Tailwind CSS."
+  }
+}

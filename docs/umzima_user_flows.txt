@@ -1,0 +1,347 @@
+{
+  "productDocumentation": {
+    "productName": "Umzima",
+    "version": "2.0 MVP",
+    "mvpGoal": "To provide small clinics with a simple, accessible, and efficient digital system for core primary healthcare (PHC) operations, focusing on patient registration, appointment management, basic clinical documentation, secure patient data access, and foundational communication tools. This system aims to improve care coordination within individual clinics and lay the groundwork for a collaborative clinic network, with a strong emphasis on health equity and addressing the digital divide.",
+    "targetAudience": [
+      "Small to medium-sized primary healthcare clinics, particularly in resource-constrained settings or underserved areas.",
+      "Clinical staff: Doctors, Nurses, Clinical Officers.",
+      "Administrative staff: Receptionists, Clinic Managers.",
+      "Patients of these clinics (indirectly, through improved service and future direct access features)."
+    ],
+    "keyPainPointsAddressed": [
+      "Inefficient manual and paper-based patient registration and record-keeping.",
+      "Fragmented and inaccessible patient information leading to care continuity gaps.",
+      "Difficult and time-consuming appointment scheduling and management.",
+      "Limited communication channels between clinic staff and with patients for reminders and follow-ups.",
+      "Lack of basic data for clinic operations overview and reporting.",
+      "Challenges in providing equitable care due to digital literacy barriers and resource limitations."
+    ],
+    "ishikawaAnalysis": {
+      "problemStatement": "Inefficient and Inequitable Primary Health Care Delivery in Small Clinic Networks due to Lack of Integrated and Accessible Digital Systems.",
+      "categories": [
+        {
+          "categoryName": "People (Staff & Patients)",
+          "causes": [
+            {
+              "causeDescription": "Varying digital literacy among staff and patients.",
+              "relatedUserFlows": ["Staff_Login", "Patient_Registration_Simplified", "Appointment_Scheduling_Assisted", "View_Patient_Records_Simple_Interface"]
+            },
+            {
+              "causeDescription": "Staff workload due to manual processes.",
+              "relatedUserFlows": ["Automated_Appointment_Reminders", "Efficient_Patient_Search", "Streamlined_Clinical_Documentation"]
+            },
+            {
+              "causeDescription": "Patient difficulties in accessing clinic/information.",
+              "relatedUserFlows": ["Clear_Appointment_Confirmation", "Basic_Patient_Messaging_for_Reminders"]
+            }
+          ]
+        },
+        {
+          "categoryName": "Processes",
+          "causes": [
+            {
+              "causeDescription": "Manual, error-prone patient registration.",
+              "relatedUserFlows": ["Patient_Registration_Digital"]
+            },
+            {
+              "causeDescription": "Inefficient appointment booking and tracking.",
+              "relatedUserFlows": ["Appointment_Scheduling_Digital", "View_Daily_Weekly_Appointments", "Manage_Appointment_Status"]
+            },
+            {
+              "causeDescription": "Paper-based or fragmented clinical documentation.",
+              "relatedUserFlows": ["Record_Basic_Consultation_Notes", "View_Patient_Visit_History"]
+            },
+            {
+              "causeDescription": "Poor information flow for patient follow-up and referrals (basic for MVP).",
+              "relatedUserFlows": ["Flag_Patient_For_Follow_Up", "Generate_Basic_Referral_Note"]
+            },
+            {
+              "causeDescription": "Lack of standardized data collection.",
+              "relatedUserFlows": ["Structured_Patient_Demographics_Input", "Standardized_Vital_Signs_Input"]
+            }
+          ]
+        },
+        {
+          "categoryName": "Technology/Tools",
+          "causes": [
+            {
+              "causeDescription": "Absence or inadequacy of current digital tools (EHR, scheduling).",
+              "relatedUserFlows": ["ALL_MVP_USER_FLOWS_AS_A_REPLACEMENT_OR_NEW_SYSTEM"]
+            },
+            {
+              "causeDescription": "Lack of integration between disparate systems (if any exist).",
+              "relatedUserFlows": ["Centralized_Patient_Database", "Unified_Appointment_View"]
+            },
+            {
+              "causeDescription": "Systems not designed for low-resource or low-connectivity environments.",
+              "uiConsiderations": ["Offline_Data_Entry_Sync_Later (Future, but design for simplicity)", "SMS_Based_Communication_Emphasis", "Low_Bandwidth_Optimized_Interface"]
+            },
+            {
+              "causeDescription": "Security and privacy concerns with patient data.",
+              "relatedUserFlows": ["Secure_User_Authentication", "Role_Based_Access_Control", "Audit_Trails_Basic (Future, consider logging)"]
+            }
+          ]
+        },
+        {
+          "categoryName": "Data/Information",
+          "causes": [
+            {
+              "causeDescription": "Inaccessible or difficult-to-retrieve patient history.",
+              "relatedUserFlows": ["View_Patient_Profile_And_History", "Search_Patient_Records"]
+            },
+            {
+              "causeDescription": "Inconsistent or incomplete patient data.",
+              "relatedUserFlows": ["Mandatory_Core_Fields_Registration", "Standardized_Data_Entry_Forms"]
+            },
+            {
+              "causeDescription": "No reliable system for appointment reminders.",
+              "relatedUserFlows": ["Automated_SMS_Appointment_Reminders", "Manual_Trigger_Appointment_Reminders"]
+            },
+            {
+              "causeDescription": "Difficulty in generating basic operational reports.",
+              "relatedUserFlows": ["View_Appointment_Statistics_Dashboard", "Patient_Demographics_Overview"]
+            }
+          ]
+        },
+        {
+          "categoryName": "Environment/Context (Clinic & Network)",
+          "causes": [
+            {
+              "causeDescription": "Resource constraints (financial, technical staff).",
+              "uiConsiderations": ["Affordable_Solution", "Easy_To_Learn_And_Use_Interface", "Minimal_Training_Required"]
+            },
+            {
+              "causeDescription": "Need for better care coordination within a clinic and potential for network.",
+              "relatedUserFlows": ["Shared_Patient_View_Within_Clinic_Roles", "Standardized_Data_For_Future_Network_Interoperability"]
+            },
+            {
+              "causeDescription": "Health equity goals require reaching underserved populations.",
+              "uiConsiderations": ["Simple_Language_Options (Future)", "Accessibility_Features_Basic_WCAG (Future, consider fonts, contrast)", "Support_For_Assisted_Use_By_Community_Health_Workers (Future)"]
+            }
+          ]
+        }
+      ]
+    },
+    "coreUserFlows_MVP": [
+      {
+        "flowName": "User_Login_Logout",
+        "description": "Allows authorized clinic staff to securely access and exit the Umzima system.",
+        "actors": ["Doctor", "Nurse", "Admin Staff"],
+        "basicSteps": [
+          "User navigates to login page.",
+          "User enters credentials (username, password).",
+          "System authenticates user.",
+          "On success, user is directed to their role-specific dashboard.",
+          "On failure, error message is displayed.",
+          "User can logout from the system."
+        ],
+        "keyData": ["Username", "Password", "User Role"],
+        "uiConsiderations": "Simple, clear login form. Password recovery option (basic). Prominent logout button."
+      },
+      {
+        "flowName": "Patient_Registration_Digital",
+        "description": "Enables clinic staff to register new patients or update existing patient information in the system.",
+        "actors": ["Admin Staff", "Nurse"],
+        "basicSteps": [
+          "Staff selects 'Register New Patient' or 'Search/Edit Patient'.",
+          "Staff enters patient's core demographic data (Name, DOB, Gender, Contact, Address, Emergency Contact).",
+          "Staff enters basic medical history summary (allergies, chronic conditions - simplified for MVP).",
+          "System assigns a unique patient identifier.",
+          "Patient record is saved."
+        ],
+        "keyData": ["Patient Demographics", "Contact Information", "Unique Patient ID", "Basic Medical History Snippet"],
+        "uiConsiderations": "Clear, structured form with mandatory fields indicated. Easy navigation. Consider potential for future national ID integration. Minimize free text for consistency (use dropdowns where possible)."
+      },
+      {
+        "flowName": "Appointment_Scheduling_Digital",
+        "description": "Allows clinic staff to schedule, reschedule, or cancel patient appointments.",
+        "actors": ["Admin Staff", "Nurse"],
+        "basicSteps": [
+          "Staff searches for and selects a patient.",
+          "Staff views available slots for selected doctor/service.",
+          "Staff selects date, time, and reason for appointment.",
+          "System confirms and records the appointment.",
+          "Option to send SMS confirmation (manual trigger or automated).",
+          "Staff can view/search appointments to reschedule or cancel."
+        ],
+        "keyData": ["Patient ID", "Doctor/Service ID", "Date", "Time", "Appointment Reason", "Appointment Status"],
+        "uiConsiderations": "User-friendly calendar view. Clear indication of available/booked slots. Simple selection process. Confirmation messages."
+      },
+      {
+        "flowName": "View_Appointments_Dashboard_Calendar",
+        "description": "Provides clinic staff with a view of scheduled appointments.",
+        "actors": ["Doctor", "Nurse", "Admin Staff"],
+        "basicSteps": [
+          "User navigates to the appointments dashboard/calendar.",
+          "View defaults to daily schedule for the logged-in user (if doctor/nurse) or entire clinic (if admin).",
+          "Ability to filter by doctor, date range (day, week).",
+          "Quick view of appointment details (patient name, time, reason)."
+        ],
+        "keyData": ["Appointment List", "Patient Name", "Time", "Doctor", "Reason"],
+        "uiConsiderations": "Clear, easily scannable list or calendar. Color-coding for appointment status (e.g., confirmed, completed, cancelled). Easy navigation between dates."
+      },
+      {
+        "flowName": "Record_Basic_Consultation_Details",
+        "description": "Allows clinical staff to record essential details of a patient consultation.",
+        "actors": ["Doctor", "Nurse"],
+        "basicSteps": [
+          "Clinician selects patient from appointment list or searches for patient.",
+          "Clinician opens new consultation note for the current visit.",
+          "Record vital signs (if applicable and measured).",
+          "Record presenting complaint, brief examination findings, diagnosis (dropdown/coded or simple text), and treatment plan/prescription (simple text for MVP).",
+          "Save consultation note to patient record."
+        ],
+        "keyData": ["Patient ID", "Visit Date", "Vital Signs", "Chief Complaint", "Diagnosis", "Treatment/Prescription Notes"],
+        "uiConsiderations": "Structured template for notes. Easy access to patient's past visit summaries. Minimize typing with pre-defined options where feasible (e.g., common diagnoses for PHC). Clear save/submit action."
+      },
+      {
+        "flowName": "View_Patient_Profile_And_History",
+        "description": "Allows clinic staff to view a patient's demographic information and past visit history.",
+        "actors": ["Doctor", "Nurse", "Admin Staff (limited view for history)"],
+        "basicSteps": [
+          "Staff searches for a patient by name, ID, or other identifier.",
+          "Staff selects the patient from search results.",
+          "System displays patient's profile (demographics, contacts).",
+          "System displays a chronological list of past visits/consultations with summaries.",
+          "Staff can select a past visit to view detailed notes (role-dependent)."
+        ],
+        "keyData": ["Patient Demographics", "Contact Information", "Visit Dates", "Consultation Summaries/Notes"],
+        "uiConsiderations": "Clean and organized layout. Easy-to-read patient summary. Clear chronological order for visit history. Quick links or tabs for different sections of the patient record."
+      },
+      {
+        "flowName": "Send_Automated_SMS_Appointment_Reminders",
+        "description": "System automatically sends SMS reminders to patients for their upcoming appointments.",
+        "actors": ["System"],
+        "basicSteps": [
+          "System scans for appointments scheduled for the next day (or configurable period).",
+          "For each appointment, system retrieves patient's mobile number.",
+          "System sends a pre-defined SMS reminder template (e.g., 'Your appointment at Umzima Clinic is on [Date] at [Time].').",
+          "Log SMS sending status."
+        ],
+        "keyData": ["Appointment Date/Time", "Patient Mobile Number", "SMS Status Log"],
+        "uiConsiderations": "Configurable reminder timing (e.g., 24 hours before). Customizable (but simple) SMS template. Ensure opt-out considerations for future."
+      },
+      {
+        "flowName": "View_Basic_Clinic_Dashboard",
+        "description": "Provides clinic admin/manager with a high-level overview of clinic activity.",
+        "actors": ["Admin Staff", "Clinic Manager"],
+        "basicSteps": [
+          "User navigates to the clinic dashboard.",
+          "Dashboard displays key metrics for the day/week (e.g., number of appointments scheduled, patients seen, types of appointments).",
+          "Simple charts or counters."
+        ],
+        "keyData": ["Total Appointments", "Completed Appointments", "Patient Count"],
+        "uiConsiderations": "Visually simple and clear. Focus on 2-3 key metrics for MVP. Data should be easily understandable at a glance."
+      }
+    ],
+    "mvpFeatures": [
+      {
+        "featureName": "Secure User Authentication and Role-Based Access",
+        "description": "Ensures only authorized personnel can access the system with permissions appropriate to their role.",
+        "relatedUserFlows": ["User_Login_Logout"]
+      },
+      {
+        "featureName": "Digital Patient Registry",
+        "description": "A centralized database for patient demographic and basic medical information.",
+        "relatedUserFlows": ["Patient_Registration_Digital", "View_Patient_Profile_And_History"]
+      },
+      {
+        "featureName": "Appointment Scheduling System",
+        "description": "Functionality to book, view, manage, and track patient appointments.",
+        "relatedUserFlows": ["Appointment_Scheduling_Digital", "View_Appointments_Dashboard_Calendar"]
+      },
+      {
+        "featureName": "Basic Clinical Notes Module",
+        "description": "Ability to record essential consultation details, including vitals, symptoms, diagnosis, and treatment.",
+        "relatedUserFlows": ["Record_Basic_Consultation_Details"]
+      },
+      {
+        "featureName": "Patient Visit History Viewing",
+        "description": "Access to a chronological record of a patient's past visits and consultation summaries.",
+        "relatedUserFlows": ["View_Patient_Profile_And_History"]
+      },
+      {
+        "featureName": "Automated SMS Appointment Reminders",
+        "description": "Reduces no-shows by automatically sending reminders to patients via SMS.",
+        "relatedUserFlows": ["Send_Automated_SMS_Appointment_Reminders"]
+      },
+      {
+        "featureName": "Simple Clinic Dashboard",
+        "description": "Provides an at-a-glance overview of key clinic activities for administrative staff.",
+        "relatedUserFlows": ["View_Basic_Clinic_Dashboard"]
+      },
+      {
+        "featureName": "Patient Search Functionality",
+        "description": "Allows staff to quickly find patient records.",
+        "relatedUserFlows": ["Patient_Registration_Digital", "Appointment_Scheduling_Digital", "View_Patient_Profile_And_History"]
+      }
+    ],
+    "preliminaryDashboardPageConcepts": [
+      {
+        "pageName": "Login Page",
+        "purpose": "User authentication.",
+        "keyElements": ["Username field", "Password field", "Login button"],
+        "relatedFlows": ["User_Login_Logout"]
+      },
+      {
+        "pageName": "Main Dashboard (Role-Specific)",
+        "purpose": "Overview of daily tasks and key information relevant to the user's role.",
+        "keyElements": [
+          "For Clinicians: Today's appointment list, alerts (e.g., pending lab results - future).",
+          "For Admin: Appointment scheduling shortcuts, patient registration shortcut, daily appointment summary."
+        ],
+        "relatedFlows": ["View_Appointments_Dashboard_Calendar", "View_Basic_Clinic_Dashboard"]
+      },
+      {
+        "pageName": "Patient List/Search Page",
+        "purpose": "To find existing patients and initiate registration for new patients.",
+        "keyElements": ["Search bar (by name, ID)", "Patient list results", "'Add New Patient' button"],
+        "relatedFlows": ["Patient_Registration_Digital", "View_Patient_Profile_And_History"]
+      },
+      {
+        "pageName": "Patient Profile Page",
+        "purpose": "Comprehensive view of a single patient's information.",
+        "keyElements": ["Demographics section", "Contact info", "Visit history list", "Consultation notes (view/add)", "Allergies/Chronic conditions summary"],
+        "relatedFlows": ["Patient_Registration_Digital", "View_Patient_Profile_And_History", "Record_Basic_Consultation_Details"]
+      },
+      {
+        "pageName": "Appointment Calendar/Scheduler Page",
+        "purpose": "To view clinic/doctor schedules and book new appointments.",
+        "keyElements": ["Calendar view (day/week)", "Doctor/service filter", "Timeslot selection", "Appointment booking form"],
+        "relatedFlows": ["Appointment_Scheduling_Digital", "View_Appointments_Dashboard_Calendar"]
+      },
+      {
+        "pageName": "Consultation Note Entry Page/Modal",
+        "purpose": "To document a patient encounter.",
+        "keyElements": ["Fields for vitals, complaint, diagnosis, treatment plan, prescription"],
+        "relatedFlows": ["Record_Basic_Consultation_Details"]
+      }
+    ],
+    "futureConsiderations": [
+      "Enhanced reporting and analytics.",
+      "Laboratory and imaging results integration.",
+      "Advanced referral management system (for network collaboration).",
+      "Patient portal for self-scheduling and record access.",
+      "Telehealth capabilities.",
+      "Inventory management for basic medical supplies/medications.",
+      "Offline data capture and synchronization capabilities.",
+      "Multilingual support.",
+      "Enhanced accessibility features (WCAG compliance).",
+      "Integration with national health information systems or IDs.",
+      "Billing and claims management (if applicable to target clinics).",
+      "More robust internal messaging and task management for staff.",
+      "Community Health Worker module/interface."
+    ],
+    "uiUxGuidingPrinciples (from Research)": [
+      "**Simplicity & Ease of Use:** Design for users with varying digital literacy. Minimal clicks, clear navigation, intuitive layout.",
+      "**Accessibility:** Use clear fonts, good contrast. Consider SMS as a primary communication channel for patient-facing interactions where appropriate. Design for low-bandwidth environments.",
+      "**Efficiency:** Streamline common tasks to reduce staff workload.",
+      "**Clarity:** Use simple language, avoid jargon. Provide clear feedback to user actions.",
+      "**Security & Privacy:** Ensure patient data is protected through design and system architecture.",
+      "**Affordability:** The technology solution itself should be cost-effective for small clinics.",
+      "**Cultural Context:** Be mindful of local practices and terminologies (for future localization).",
+      "**Patient-Centeredness:** Even if patients don't directly use the MVP, the system should enable staff to provide more patient-centered care (e.g., by having better access to history, enabling reminders)."
+    ]
+  }
+}
