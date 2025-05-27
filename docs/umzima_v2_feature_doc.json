@@ -1,0 +1,746 @@
+{
+  "featureDocument": {
+    "documentVersion": "1.0 MVP",
+    "projectName": "Umzima v2",
+    "date": "2024-10-27",
+    "introduction": {
+      "purpose": "This document provides an exhaustive list of features for the Minimum Viable Product (MVP) of Umzima v2. It serves as the source of truth for the development team, guiding roadmap creation, feature implementation, and testing of user flows. Umzima v2 aims to be a digital health platform for small clinics, enabling networked primary healthcare with a strong emphasis on health equity, continuity of care, efficiency, and accessibility, particularly in resource-limited settings. This MVP will be built leveraging the OpenMRS platform as its backend.",
+      "scope": "The MVP focuses on core functionalities enabling clinic and user management, patient registration and record access, basic appointment scheduling, simplified clinical documentation, inter-clinic referrals, essential communication tools (including SMS and voice considerations), a basic patient portal, offline data caching/input, and foundational reporting. Features are designed with scalability in mind but are scoped for initial pilot deployment."
+    },
+    "corePrinciplesAndDesignPhilosophy": [
+      "**Health Equity First**: Design for inclusivity, addressing digital accessibility, language/literacy, age, and racial equity. Prioritize SMS, simple interfaces, and consider voice-assisted elements.",
+      "**Continuity of Care Centric**: Ensure seamless information flow (interpersonal, informational, managerial) within and between clinics.",
+      "**Simplicity & Usability**: Intuitive, easy-to-learn interface requiring minimal training, suitable for users with varying digital literacy. Prioritize clear navigation and minimal clicks.",
+      "**Offline Resilience**: Core functions must support offline data entry and viewing with reliable synchronization for low-connectivity environments.",
+      "**Efficiency for Small Clinics**: Automate where possible (e.g., reminders, task prioritization placeholders), streamline workflows to reduce staff burden.",
+      "**Scalability & Modularity**: Build with a modular approach on OpenMRS, allowing incremental feature adoption and future growth.",
+      "**Security & Privacy**: Adhere to data protection best practices (e.g., HIPAA principles if applicable contextually) and OpenMRS security standards."
+    ],
+    "targetUsersAndRoles": [
+      {
+        "userRole": "Clinic Administrator",
+        "description": "Manages clinic profile, staff accounts, system settings, and oversees clinic operations. Has access to basic operational dashboards.",
+        "permissions": ["Manage Clinic Profile", "Manage Staff Accounts", "Configure Clinic Settings", "View Admin Dashboard", "Oversee Referrals"]
+      },
+      {
+        "userRole": "Doctor",
+        "description": "Provides clinical care, records patient notes, makes diagnoses, prescribes treatment, makes and receives referrals.",
+        "permissions": ["Access Patient Records", "Record Consultation Notes", "Manage Appointments (Own)", "Create/Manage Referrals", "Communicate with Patients/Providers", "View Provider Dashboard"]
+      },
+      {
+        "userRole": "Nurse / Clinical Officer",
+        "description": "Assists with patient care, registers patients, manages appointments, records vitals and basic notes, handles communication, supports CHWs.",
+        "permissions": ["Register Patients", "Edit Patient Demographics", "Manage Appointments (All/Assigned)", "Record Vitals/Basic Notes", "Manage Referrals (Process)", "Communicate with Patients/Providers", "View Provider Dashboard"]
+      },
+      {
+        "userRole": "Community Health Worker (CHW) - (Limited MVP Access)",
+        "description": "Facilitates patient outreach, assists with patient portal access/communication, basic data entry under supervision. MVP focuses on enabling nurses to manage CHW-related tasks.",
+        "permissions": ["View Assigned Patient List (Simplified)", "Record Basic Outreach Notes (Offline, pre-defined)", "Facilitate Patient Communication (via SMS/Voice proxy)"]
+      },
+      {
+        "userRole": "Patient (via Portal/SMS/Voice)",
+        "description": "Accesses their health information, appointments, and communicates with providers.",
+        "permissions": ["View Own Medical Records (Summary)", "View Appointments", "Send/Receive Messages with Provider"]
+      }
+    ],
+    "systemArchitectureHighLevel": {
+      "frontend": "Web Application (React/Vue/Svelte with Vite/Next.js - to be decided based on LLM scaffold output and team preference), PWA considerations for offline caching.",
+      "backend": "OpenMRS (Reference Application as base), serving data via REST APIs.",
+      "communicationGateway": "Third-party SMS Gateway (e.g., Twilio, Africa's Talking) for patient SMS. Potential for basic voice call integration or VoLTE/VoIP for voice features.",
+      "database": "MySQL (managed by OpenMRS)."
+    },
+    "modulesAndFeatures": [
+      {
+        "moduleName": "System & Clinic Administration",
+        "features": [
+          {
+            "featureID": "SA-001",
+            "featureName": "User Authentication & Session Management",
+            "description": "Secure login for clinic staff with session management.",
+            "userStories": [
+              "As a clinic staff member, I want to securely log in with my credentials so that I can access the system.",
+              "As a system admin, I want user sessions to expire after inactivity so that unauthorized access is minimized."
+            ],
+            "acceptanceCriteria": [
+              "User can log in with valid username/password.",
+              "Invalid credentials show an error message.",
+              "Session is maintained across navigation.",
+              "Logout function securely ends the session.",
+              "Password complexity rules enforced (basic for MVP)."
+            ],
+            "keyDataElements": ["Username", "Hashed Password", "User Role", "Session Token"],
+            "uiUxConsiderations": "Simple login form. Clear error messages. Prominent logout button.",
+            "openMRSIntegrationNotes": "Leverage OpenMRS core authentication mechanism. Map Umzima roles to OpenMRS roles.",
+            "researchLinks": ["Generic Security"]
+          },
+          {
+            "featureID": "SA-002",
+            "featureName": "Clinic Profile Management (Admin)",
+            "description": "Allows administrators to register their clinic on the Umzima network and manage basic clinic information.",
+            "userStories": [
+              "As a Clinic Administrator, I want to register my clinic with its name, address, contact details, and services offered so that it is identifiable within the network."
+            ],
+            "acceptanceCriteria": [
+              "Admin can create a new clinic profile with essential details.",
+              "Admin can edit existing clinic profile information.",
+              "Clinic information is displayed accurately."
+            ],
+            "keyDataElements": ["Clinic Name", "Address", "Contact Phone", "Contact Email", "Operating Hours", "Services Offered (Tags/List)"],
+            "uiUxConsiderations": "Simple, structured form for clinic registration. Voice-assisted setup option for initial onboarding.",
+            "openMRSIntegrationNotes": "Map clinic details to OpenMRS Location and Location Attributes. May require a custom data model or attributes if not fully supported by standard Location.",
+            "researchLinks": ["Digital Health Equity (Simple Onboarding)"]
+          },
+          {
+            "featureID": "SA-003",
+            "featureName": "Staff Account Management (Admin)",
+            "description": "Allows Clinic Administrators to create, manage, and deactivate staff accounts.",
+            "userStories": [
+              "As a Clinic Administrator, I want to create accounts for doctors, nurses, and other staff with appropriate roles so they can access the system.",
+              "As a Clinic Administrator, I want to deactivate accounts for staff who are no longer with the clinic."
+            ],
+            "acceptanceCriteria": [
+              "Admin can create new staff accounts with username, temporary password, and role assignment.",
+              "Admin can view a list of staff accounts.",
+              "Admin can edit basic staff details and roles.",
+              "Admin can deactivate/activate staff accounts."
+            ],
+            "keyDataElements": ["Staff Name", "Username", "Role", "Contact Info", "Account Status"],
+            "uiUxConsiderations": "Clear list of users. Simple forms for creation/editing. Role selection via dropdown.",
+            "openMRSIntegrationNotes": "Create/manage OpenMRS Users and assign OpenMRS Roles corresponding to Umzima roles. Manage provider accounts if doctors/nurses are OpenMRS Providers.",
+            "researchLinks": ["General Admin"]
+          },
+          {
+            "featureID": "SA-004",
+            "featureName": "Basic Role-Based Access Control (RBAC)",
+            "description": "System enforces access to features and data based on user roles.",
+            "userStories": [
+              "As a Nurse, I should only see features and data relevant to my nursing duties and not full admin settings.",
+              "As a Doctor, I should have full access to clinical data but not clinic-wide administrative settings."
+            ],
+            "acceptanceCriteria": [
+              "Users are restricted to functionalities permitted for their assigned role.",
+              "Data access is filtered based on role privileges (e.g., an admin sees all appointments, a doctor sees their own or assigned).",
+              "Sensitive operations are restricted to appropriate roles."
+            ],
+            "keyDataElements": ["User Role", "Feature Permissions", "Data Access Rules"],
+            "uiUxConsiderations": "Permissions should be implicitly enforced; users shouldn't see options they can't access.",
+            "openMRSIntegrationNotes": "Leverage OpenMRS Privileges and Roles. Define a clear mapping between Umzima roles and OpenMRS privileges.",
+            "researchLinks": ["General Security"]
+          },
+          {
+            "featureID": "SA-005",
+            "featureName": "Basic Training Resources Access",
+            "description": "Provides access to simple training materials for users of varying digital literacy.",
+            "userStories": [
+              "As a new Nurse, I want to access simple, voice-guided tutorials on how to register a patient so I can learn quickly.",
+              "As a Clinic Administrator, I want to direct staff to easily understandable guides for system usage."
+            ],
+            "acceptanceCriteria": [
+              "A dedicated section/link for training resources is available.",
+              "MVP includes at least 2-3 simple guides for core tasks (e.g., patient registration, appointment booking).",
+              "Placeholder for voice-guided tutorial content (actual voice content might be post-MVP, but link/structure for it)."
+            ],
+            "keyDataElements": ["Tutorial Title", "Tutorial Content (Text/Video links)", "Target Role"],
+            "uiUxConsiderations": "Easily discoverable. Content should be simple, visual, and consider low-literacy users.",
+            "openMRSIntegrationNotes": "Can be external links or simple content pages within an Umzima OWA/module.",
+            "researchLinks": ["Digital Health Equity (Digital Literacy, Age and Engagement)"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Patient Management",
+        "features": [
+          {
+            "featureID": "PM-001",
+            "featureName": "Add/Register New Patient (Offline Capable)",
+            "description": "Allows clinic staff (primarily nurses/admin) to register new patients with core demographic and basic medical information, with offline capability.",
+            "userStories": [
+              "As a Nurse, I want to register a new patient by entering their demographic details, contact information, and a brief medical summary, even if I'm offline, so their record is created and syncs later.",
+              "As a Nurse, I want to use voice input for some fields during patient registration to speed up the process or assist with data entry."
+            ],
+            "acceptanceCriteria": [
+              "Staff can enter patient's full name, DOB, gender, primary contact number (SMS capable), alternate contact, address.",
+              "Staff can record basic alerts (e.g., allergies - predefined list + 'other'), chronic conditions (predefined list + 'other').",
+              "System assigns a unique patient ID.",
+              "Patient record can be saved offline and queued for sync.",
+              "Successful sync confirmation is provided.",
+              "Basic voice input for text fields (leveraging device OS capabilities if web-based)."
+            ],
+            "keyDataElements": ["Patient ID", "Full Name", "DOB", "Gender", "Contact Phone (Primary/SMS)", "Address", "Emergency Contact", "Allergies (Concept-coded)", "Chronic Conditions (Concept-coded)"],
+            "uiUxConsiderations": "Simplified form. Clear indication of mandatory fields. Visual feedback for offline status and sync progress. Easy toggling for voice input.",
+            "openMRSIntegrationNotes": "Create a new OpenMRS Patient. Map fields to Person Attributes and Observations (for allergies/conditions linked to concepts). Offline data stored locally on the client and synced via REST API.",
+            "researchLinks": ["Digital Health Equity (Digital Accessibility, Language/Literacy)", "Clinic Efficiency (Offline)", "Health Equity Res. (Voice)"]
+          },
+          {
+            "featureID": "PM-002",
+            "featureName": "Edit Patient Record (Offline Capable)",
+            "description": "Allows authorized staff to edit existing patient demographic and basic medical information, with offline capability.",
+            "userStories": [
+              "As a Nurse, I want to update a patient's contact number or address, even if offline, so the information is current when synced."
+            ],
+            "acceptanceCriteria": [
+              "Staff can search for and select a patient.",
+              "Editable fields from registration are available for modification.",
+              "Changes can be saved offline and queued for sync.",
+              "Audit trail for changes (basic logging for MVP: who changed what, when)."
+            ],
+            "keyDataElements": ["(Same as PM-001)", "Last Updated Timestamp", "Updated By"],
+            "uiUxConsiderations": "Clear distinction between view and edit mode. Save/Cancel actions visible. Offline save and sync indicators.",
+            "openMRSIntegrationNotes": "Update OpenMRS Patient, Person Attributes, Observations. Offline changes synced via REST API.",
+            "researchLinks": ["Clinic Efficiency (Offline)"]
+          },
+          {
+            "featureID": "PM-003",
+            "featureName": "View Patient Profile & Basic Medical Summary",
+            "description": "Displays a consolidated view of a patient's demographic data and a summary of key medical information.",
+            "userStories": [
+              "As a Doctor, I want to quickly view a patient's demographic details, recorded allergies, and chronic conditions before starting a consultation."
+            ],
+            "acceptanceCriteria": [
+              "Displays patient name, ID, DOB, gender, contact details, address.",
+              "Clearly lists recorded allergies and chronic conditions.",
+              "Information is read-only in this view (editing via PM-002).",
+              "Information is viewable offline (recently accessed patients)."
+            ],
+            "keyDataElements": ["(Relevant subset of PM-001 data)"],
+            "uiUxConsiderations": "Clean, easily scannable layout. Important information (alerts, allergies) prominently displayed. Offline caching of profiles for recently viewed patients.",
+            "openMRSIntegrationNotes": "Fetch Patient, Person Attributes, and relevant Observations via REST API. Structure the display in the Umzima UI.",
+            "researchLinks": ["Continuity of Care (Information)"]
+          },
+          {
+            "featureID": "PM-004",
+            "featureName": "Multilingual Patient Record Fields (MVP: Placeholder/Design for Spanish)",
+            "description": "Ability to store and display certain patient-provided information in a secondary language (e.g., Spanish), primarily for patient communication and understanding.",
+            "userStories": [
+              "As a Nurse helping a Spanish-speaking patient, I want to record their preferred language and potentially some notes in Spanish so that communication is clearer for them and other staff aware of their preference."
+            ],
+            "acceptanceCriteria": [
+              "Patient record includes a 'Preferred Language' field.",
+              "Design allows for specific fields (e.g., patient notes, communication preferences) to potentially hold multilingual content (MVP might just be a note field for this).",
+              "UI indicates the language of the content where applicable."
+            ],
+            "keyDataElements": ["Preferred Language (Concept)", "Patient Notes (potentially multilingual)"],
+            "uiUxConsiderations": "Clear labeling for language fields. For MVP, this might be a design consideration for data structure rather than full UI translation.",
+            "openMRSIntegrationNotes": "Store 'Preferred Language' as a Person Attribute linked to a concept. Multilingual notes could be stored in Obs with language-specific concepts or attributes. OpenMRS supports localization for its UI elements.",
+            "researchLinks": ["Digital Health Equity (Language and Literacy)"]
+          },
+          {
+            "featureID": "PM-005",
+            "featureName": "Community Health Worker (CHW) Patient List & Basic Notes (MVP Foundation)",
+            "description": "Foundation for CHW integration. Allows a nurse/admin to assign patients to a CHW list and for basic, structured CHW outreach notes to be recorded (potentially by the nurse on behalf of CHW initially).",
+            "userStories": [
+              "As a Nurse, I want to flag patients who require CHW follow-up so their outreach can be coordinated.",
+              "As a Nurse, I want to record a brief note from a CHW about a patient visit (e.g., 'Patient visited, medication adherence checked')."
+            ],
+            "acceptanceCriteria": [
+              "Ability to flag/assign a patient to a 'CHW Follow-up' list or status.",
+              "A simple, structured note type for 'CHW Outreach' can be added to a patient's record (by nurse/admin).",
+              "CHW notes are viewable in patient history."
+            ],
+            "keyDataElements": ["Patient ID", "CHW Assignment Status/Flag", "CHW Outreach Note (Date, Type of Contact, Brief Outcome - concept based)"],
+            "uiUxConsiderations": "Simple flag/tagging system. Structured note template for CHW outreach.",
+            "openMRSIntegrationNotes": "Could use a Program enrollment ('CHW Program') or a specific Encounter Type for CHW notes, with relevant Obs. Patient flags could be Person Attributes or part of an Active List.",
+            "researchLinks": ["Health Equity Res. (CHW Integration)"]
+          },
+          {
+            "featureID": "PM-006",
+            "featureName": "Patient Search",
+            "description": "Allows staff to quickly find patient records using various criteria.",
+            "userStories": [
+              "As an Admin staff, I want to search for a patient by their name, patient ID, or phone number to quickly access their record."
+            ],
+            "acceptanceCriteria": [
+              "Search by patient name (full or partial) returns relevant results.",
+              "Search by patient ID returns the specific patient.",
+              "Search by primary phone number returns relevant patients.",
+              "Search results are displayed clearly, allowing selection."
+            ],
+            "keyDataElements": ["Patient Name", "Patient ID", "Phone Number"],
+            "uiUxConsiderations": "Prominent search bar. Fast and responsive search.",
+            "openMRSIntegrationNotes": "Leverage OpenMRS Patient search REST API capabilities.",
+            "researchLinks": ["Generic System Requirement"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Appointment Management",
+        "features": [
+          {
+            "featureID": "AM-001",
+            "featureName": "Schedule New Appointment (Offline Capable)",
+            "description": "Allows staff to book new appointments for patients, with offline capability.",
+            "userStories": [
+              "As an Admin staff, I want to schedule an appointment for a patient with a specific doctor on a chosen date and time, even if offline, so it syncs when I'm back online."
+            ],
+            "acceptanceCriteria": [
+              "Staff can select a patient.",
+              "Staff can view provider availability (basic view for MVP, possibly just by day).",
+              "Staff can select appointment type (e.g., New, Follow-up - concept based), date, time, and provider.",
+              "Appointments can be saved offline and queued for sync.",
+              "Conflict detection for provider schedule (basic, on sync or if online).",
+              "Confirmation message upon successful booking/queuing."
+            ],
+            "keyDataElements": ["Patient ID", "Provider ID", "Appointment Type (Concept)", "Date", "Time", "Status (Scheduled, Confirmed)"],
+            "uiUxConsiderations": "Intuitive calendar/slot selection. Clear indication of offline booking. Visual feedback on sync status.",
+            "openMRSIntegrationNotes": "Integrate with OpenMRS Appointment Scheduling module via REST APIs. Offline appointments stored locally and synced.",
+            "researchLinks": ["Clinic Efficiency (Offline)"]
+          },
+          {
+            "featureID": "AM-002",
+            "featureName": "View/Manage Appointments (Daily/Weekly View)",
+            "description": "Allows staff to view and manage scheduled appointments for the clinic or specific providers.",
+            "userStories": [
+              "As a Nurse, I want to view all appointments for today to prepare for patients.",
+              "As an Admin, I want to view next week's schedule for Dr. Smith to manage bookings."
+            ],
+            "acceptanceCriteria": [
+              "Daily and weekly calendar views available.",
+              "Filter by provider.",
+              "Ability to view appointment details (patient, time, type, status).",
+              "Ability to change appointment status (e.g., Confirmed, Attended, Cancelled, No-show).",
+              "Offline viewing of cached appointments (e.g., today's/this week's schedule)."
+            ],
+            "keyDataElements": ["Appointment ID", "Patient Name", "Provider Name", "Date/Time", "Type", "Status"],
+            "uiUxConsiderations": "Clear, easily scannable calendar or list view. Color-coding for appointment status. Offline cache for current day/week.",
+            "openMRSIntegrationNotes": "Fetch appointment data from OpenMRS Appointment Scheduling module via REST APIs. Update status via API.",
+            "researchLinks": ["Continuity of Care (Management)"]
+          },
+          {
+            "featureID": "AM-003",
+            "featureName": "Automated SMS Appointment Reminders",
+            "description": "System automatically sends SMS reminders to patients for upcoming appointments.",
+            "userStories": [
+              "As a Clinic Administrator, I want the system to automatically send SMS reminders to patients 24 hours before their appointment to reduce no-shows."
+            ],
+            "acceptanceCriteria": [
+              "SMS reminders are sent automatically (e.g., 24 hours before scheduled time).",
+              "SMS content is configurable (template with patient name, clinic name, date, time).",
+              "Uses patient's primary SMS-capable contact number from their record.",
+              "Logs successful/failed SMS dispatches."
+            ],
+            "keyDataElements": ["Patient Phone Number", "Appointment Date/Time", "SMS Log (Status, Timestamp)"],
+            "uiUxConsiderations": "Admin interface to configure reminder timing and basic message template.",
+            "openMRSIntegrationNotes": "A custom OpenMRS module/service that queries appointments from the Appointment Scheduling module and uses an external SMS gateway.",
+            "researchLinks": ["Digital Health Equity (SMS reach)", "Clinic Efficiency"]
+          },
+          {
+            "featureID": "AM-004",
+            "featureName": "Voice Call Appointment Reminders (MVP: Manual Trigger/Log)",
+            "description": "Supports logging manual voice call reminders, with a view to future automation, for patients without SMS capability or who prefer voice.",
+            "userStories": [
+              "As a Nurse, for patients who prefer voice calls, I want to log that I made a voice call reminder for their appointment."
+            ],
+            "acceptanceCriteria": [
+              "Ability to mark an appointment as 'Voice Reminder Sent'.",
+              "Timestamp and user who logged the voice reminder is recorded.",
+              "This log is visible in appointment details or patient communication history."
+            ],
+            "keyDataElements": ["Appointment ID", "Voice Reminder Logged (Boolean)", "Reminder Log Timestamp", "Logged By User"],
+            "uiUxConsiderations": "Simple checkbox or button on appointment detail to log a manual call. Clear display of reminder status.",
+            "openMRSIntegrationNotes": "Could be stored as an Observation against the appointment encounter or a custom attribute on the appointment. For automation (post-MVP), would require IVR/TTS integration.",
+            "researchLinks": ["Digital Health Equity (Age and Engagement, Literacy)", "Continuity of Care (Interpersonal)"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Clinical Workflow & Documentation",
+        "features": [
+          {
+            "featureID": "CW-001",
+            "featureName": "Record Basic Consultation Notes (Offline Capable)",
+            "description": "Allows clinicians to record essential details of a patient consultation using a simplified, structured form, with offline capability.",
+            "userStories": [
+              "As a Doctor, I want to record the patient's presenting complaint, key examination findings, diagnosis, and treatment plan during or after a consultation, even if I am offline.",
+              "As a Nurse, I want to record vital signs for a patient before their consultation with the doctor."
+            ],
+            "acceptanceCriteria": [
+              "Clinician can select a patient (typically from appointment list).",
+              "A new encounter/consultation note can be initiated.",
+              "Fields for: Presenting Complaint (text), Vital Signs (Temp, BP, HR, RR, SpO2 - numeric), Brief Examination Findings (text), Diagnosis (dropdown from PHC concept set, or simple text), Treatment Plan/Prescription Notes (text).",
+              "Consultation note can be saved offline and queued for sync.",
+              "Saved notes are linked to the patient and the specific visit/appointment."
+            ],
+            "keyDataElements": ["Encounter ID", "Patient ID", "Visit Date", "Provider ID", "Presenting Complaint", "Vitals (Concepts)", "Diagnosis (Concept/Text)", "Treatment Plan"],
+            "uiUxConsiderations": "Structured but flexible form. Easy navigation between fields. Voice input option for text fields. Clear save and sync status.",
+            "openMRSIntegrationNotes": "Create an OpenMRS Encounter for the visit. Store data as Observations linked to defined concepts. Use HTML Form Entry module for form creation and data submission.",
+            "researchLinks": ["MDPI Nurses' Views (Information Continuity)", "Clinic Efficiency (Offline)"]
+          },
+          {
+            "featureID": "CW-002",
+            "featureName": "View Patient Visit History (Clinical Notes)",
+            "description": "Allows clinicians to view a chronological list of past consultation notes for a selected patient.",
+            "userStories": [
+              "As a Doctor, I want to review a patient's previous visit notes, diagnoses, and treatments before starting a new consultation to ensure continuity of care."
+            ],
+            "acceptanceCriteria": [
+              "On patient profile, displays a list of past encounters/visits in reverse chronological order.",
+              "Each entry shows date, provider (if available), and a summary/chief complaint/diagnosis.",
+              "Clinician can click an entry to view the full consultation note recorded for that visit.",
+              "Offline viewing of cached notes for recently accessed patients."
+            ],
+            "keyDataElements": ["Encounter Date", "Provider", "Encounter Type", "Key Observations (Diagnosis, Complaint)"],
+            "uiUxConsiderations": "Easily scannable list. Clear summaries. Quick access to full note details. Offline caching.",
+            "openMRSIntegrationNotes": "Fetch Encounters and associated Observations for the patient via REST API.",
+            "researchLinks": ["MDPI Nurses' Views (Information Continuity)"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Referral Management (MVP - Basic Internal)",
+        "description": "MVP focuses on internal referrals or tracking external referrals initiated by the clinic. Full inter-clinic networked referrals are complex and may be post-MVP, but foundations are laid.",
+        "features": [
+          {
+            "featureID": "RM-001",
+            "featureName": "Create Referral Request (Offline Capable)",
+            "description": "Allows clinicians to create a referral request for a patient to another service or specialist (initially, this might be tracking referrals made, rather than direct system-to-system transfer to external clinics for MVP).",
+            "userStories": [
+              "As a Doctor, I want to create a referral note for a patient to see a specialist, including reason for referral and relevant patient summary, and save it even if offline."
+            ],
+            "acceptanceCriteria": [
+              "Clinician can select a patient.",
+              "Form to enter: Referred to (Service/Specialist - text for MVP, concept for future), Reason for Referral (text), Brief Clinical Summary (auto-populated snippets or manual entry).",
+              "Referral request can be saved offline and queued for sync.",
+              "Referral is linked to the patient record."
+            ],
+            "keyDataElements": ["Referral ID", "Patient ID", "Referring Provider", "Referred To Service/Specialist", "Reason for Referral", "Clinical Summary", "Referral Date", "Referral Status (e.g., Draft, Sent/Logged)"],
+            "uiUxConsiderations": "Simple form. Option to attach basic patient summary (auto-generated from profile for MVP). Offline save.",
+            "openMRSIntegrationNotes": "Could use an Order of type 'Referral' or a specific Encounter type with referral-specific observations. For actual inter-clinic (post-MVP), FHIR resources (ServiceRequest, DiagnosticReport) would be relevant.",
+            "researchLinks": ["Continuity of Care (Information, Management)"]
+          },
+          {
+            "featureID": "RM-002",
+            "featureName": "Track Referral Status (Basic)",
+            "description": "Allows staff to view and update the status of referrals initiated by their clinic.",
+            "userStories": [
+              "As a Nurse, I want to see a list of referrals made by our clinic and update their status (e.g., 'Patient Attended Specialist', 'Report Received') to track follow-up."
+            ],
+            "acceptanceCriteria": [
+              "List of referrals viewable, filterable by patient or status.",
+              "Staff can manually update referral status (e.g., Sent/Logged, Appointment Made, Seen by Specialist, Closed).",
+              "Status updates are timestamped and user-audited (basic)."
+            ],
+            "keyDataElements": ["Referral ID", "Patient Name", "Referred To", "Referral Date", "Current Status", "Last Status Update Date/User"],
+            "uiUxConsiderations": "Clear list view. Simple status update mechanism (dropdown).",
+            "openMRSIntegrationNotes": "Status updates would modify the Order status or specific Observations related to the referral encounter/order.",
+            "researchLinks": ["Continuity of Care (Management)"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Communication Tools",
+        "features": [
+          {
+            "featureID": "CT-001",
+            "featureName": "Patient-Provider SMS Messaging (Basic, Asynchronous)",
+            "description": "Allows providers to send simple SMS messages to patients (e.g., for follow-up instructions, non-urgent queries) and patients to reply (replies might route to a shared clinic inbox for MVP).",
+            "userStories": [
+              "As a Nurse, I want to send a brief SMS to a patient with a reminder about their post-visit instructions.",
+              "As a patient, I want to be able to reply to an SMS from the clinic for a simple query (MVP: reply handling might be manual by clinic staff)."
+            ],
+            "acceptanceCriteria": [
+              "Providers can initiate an SMS to a patient from their profile.",
+              "Message content is free text (with character limits).",
+              "Sent messages are logged in patient communication history.",
+              "MVP: Incoming patient SMS replies are routed to a general clinic queue/inbox for manual staff review and action (not direct to provider initially).",
+              "Patient consent for SMS communication is noted/managed."
+            ],
+            "keyDataElements": ["Patient ID", "Patient Phone Number", "Message Content", "Timestamp", "Sender/Receiver", "Delivery Status (from gateway)"],
+            "uiUxConsiderations": "Simple message composition interface. Character counter. Clear log of communications. Emphasize for non-urgent communication.",
+            "openMRSIntegrationNotes": "Custom module integrating with SMS gateway. Communication log could be stored as Encounters of a specific type or custom data objects linked to the patient. Patient consent is critical (Person Attribute).",
+            "researchLinks": ["Digital Health Equity (SMS reach, Accessibility)"]
+          },
+          {
+            "featureID": "CT-002",
+            "featureName": "Patient-Provider Voice Call Logging / Basic Initiation (MVP: Logging)",
+            "description": "Allows logging of voice calls made to/received from patients, and potentially a placeholder for initiating calls via a connected system in the future.",
+            "userStories": [
+              "As a Doctor, after speaking with a patient on the phone, I want to log the call and a brief summary of the discussion in their record.",
+              "As a Nurse, I want to quickly access a patient's phone number to initiate a call."
+            ],
+            "acceptanceCriteria": [
+              "Staff can log a voice call made/received, including date, time, duration (approx.), and a brief summary note.",
+              "Call log is part of the patient's communication history.",
+              "Easy access to patient's phone number to facilitate manual dialing."
+            ],
+            "keyDataElements": ["Patient ID", "Call Date/Time", "Call Direction (Incoming/Outgoing)", "Approx. Duration", "Call Summary Note", "Staff Member Involved"],
+            "uiUxConsiderations": "Simple form for logging call details. Prominent display of patient phone number.",
+            "openMRSIntegrationNotes": "Store call logs as Encounters of a specific type or custom data objects. Future integration with CTI (Computer Telephony Integration) is complex.",
+            "researchLinks": ["Digital Health Equity (Voice for low-literacy, interpersonal continuity)"]
+          },
+          {
+            "featureID": "CT-003",
+            "featureName": "Inter-Clinic Messaging (MVP: Basic Secure Text-Based, Offline Queueing)",
+            "description": "Allows staff from one clinic to send secure messages to staff at another (registered) clinic, primarily for referral queries or care coordination. Messages can be queued offline.",
+            "userStories": [
+              "As a Doctor from Clinic A, I want to send a secure message to Dr. B at Clinic Z regarding a referred patient, even if Clinic Z's system is temporarily offline, ensuring the message is delivered when possible."
+            ],
+            "acceptanceCriteria": [
+              "Users can select a target clinic and then a specific role/provider (if known, or general clinic inbox) to message.",
+              "Text-based messages can be composed and sent.",
+              "Messages are queued for delivery if the recipient's system/user is offline and synced/delivered when online.",
+              "Notification for new messages (simple indicator).",
+              "Messages are logged and auditable."
+            ],
+            "keyDataElements": ["Message ID", "Sender Clinic/User", "Receiver Clinic/User", "Timestamp (Sent, Delivered, Read)", "Message Content", "Status"],
+            "uiUxConsiderations": "Simple inbox/sent items view. Clear addressing. Offline queueing indicator. Security is paramount.",
+            "openMRSIntegrationNotes": "This is complex for inter-OpenMRS instance communication. MVP might simulate this with a central message broker or by having both clinics on the SAME OpenMRS instance but different locations. True inter-instance messaging needs a more advanced architecture (e.g., using FHIR Messaging or a Health Information Exchange). For MVP, focus on message queueing within one instance or a very controlled setup.",
+            "researchLinks": ["Continuity of Care (Management, Information)"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Patient Portal (MVP - Basic SMS/Voice Interaction and Web View)",
+        "features": [
+          {
+            "featureID": "PP-001",
+            "featureName": "View Basic Medical Record Summary (Offline Cacheable)",
+            "description": "Allows patients to view a simplified summary of their medical records (allergies, chronic conditions, recent diagnoses, medication list - text for MVP). Accessible via simple web view, with offline caching.",
+            "userStories": [
+              "As a patient, I want to view a summary of my key health information online, even if I have intermittent internet, so I am informed about my health."
+            ],
+            "acceptanceCriteria": [
+              "Patient can log in securely (simple authentication for MVP - e.g., DOB + PIN sent via SMS).",
+              "Displays a read-only summary of: Allergies, Chronic Conditions, Recent Diagnoses (last 2-3 from notes), Current Medications (as text list from notes).",
+              "Key information can be cached for offline viewing after initial load.",
+              "Content presented at 7th/8th-grade reading level."
+            ],
+            "keyDataElements": ["Patient-specific subset of PM & CW data"],
+            "uiUxConsiderations": "Extremely simple layout. Large, clear fonts. High contrast option. Offline access clearly indicated. Minimal navigation.",
+            "openMRSIntegrationNotes": "A separate web application (or OWA) that authenticates the patient and fetches specific, curated data via OpenMRS REST API. Careful consideration of what data to expose.",
+            "researchLinks": ["Digital Health Equity (Patient Engagement, Literacy)"]
+          },
+          {
+            "featureID": "PP-002",
+            "featureName": "View Upcoming Appointments & Receive SMS/Voice Reminders",
+            "description": "Patients can view their upcoming appointments. System also sends SMS/Voice reminders.",
+            "userStories": [
+              "As a patient, I want to see my upcoming appointments in the portal or receive an SMS/voice reminder so I don't miss them."
+            ],
+            "acceptanceCriteria": [
+              "Portal displays a list of upcoming appointments (date, time, clinic, provider).",
+              "SMS reminders are sent (as per AM-003).",
+              "Voice call reminders are logged/sent (as per AM-004).",
+              "Appointment information is cacheable offline."
+            ],
+            "keyDataElements": ["Appointment Date/Time", "Provider", "Clinic Location"],
+            "uiUxConsiderations": "Clear list of appointments. Easy to understand.",
+            "openMRSIntegrationNotes": "Fetches appointment data from OpenMRS Appointment Scheduling module via REST API.",
+            "researchLinks": ["Digital Health Equity", "Continuity of Care"]
+          },
+          {
+            "featureID": "PP-003",
+            "featureName": "Send/Receive Messages with Provider (via Portal/SMS/Voice Response placeholder)",
+            "description": "Allows patients to send simple messages to their clinic/provider and receive replies. Leverages SMS for non-smartphone users, with voice response options being a design goal.",
+            "userStories": [
+              "As a patient, I want to send a non-urgent question to my clinic through the portal or by replying to an SMS, and receive a response.",
+              "As a patient with low literacy, I want an option to listen to messages or reply using my voice (MVP: receive voice notifications, reply via SMS, or system logs need for callback)."
+            ],
+            "acceptanceCriteria": [
+              "Portal users can compose and send text messages to the clinic.",
+              "Portal users can view replies from the clinic.",
+              "Patients can reply to clinic SMS (routed to clinic inbox - see CT-001).",
+              "Placeholder for voice-to-text input for patients in portal (device capability).",
+              "Placeholder for text-to-voice output for portal messages (device capability or simple audio file for critical alerts).",
+              "Messages are logged."
+            ],
+            "keyDataElements": ["Message Content", "Timestamp", "Sender/Receiver"],
+            "uiUxConsiderations": "Simple messaging interface. Clear indication of unread messages. For voice: simple playback controls, easy voice input initiation.",
+            "openMRSIntegrationNotes": "Integrates with the same messaging backend as CT-001. Patient authentication required for portal messaging.",
+            "researchLinks": ["Digital Health Equity (Literacy, Accessibility, SMS/Voice Reach)"]
+          },
+          {
+            "featureID": "PP-004",
+            "featureName": "Patient Portal Accessibility Options",
+            "description": "Basic accessibility features for the patient portal.",
+            "userStories": [
+              "As a patient with visual impairment, I want to be able to increase font size or use a high-contrast mode in the portal."
+            ],
+            "acceptanceCriteria": [
+              "Option to increase/decrease font size.",
+              "Option for a high-contrast theme.",
+              "Basic keyboard navigation support."
+            ],
+            "keyDataElements": ["User Interface Preferences"],
+            "uiUxConsiderations": "Clearly accessible settings for these options.",
+            "openMRSIntegrationNotes": "Frontend implementation; no direct OpenMRS backend change needed, but user preferences could be stored if desired.",
+            "researchLinks": ["Digital Health Equity (Accessibility)"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Offline Functionality & Synchronization",
+        "isCrossCutting": true,
+        "features": [
+          {
+            "featureID": "OF-001",
+            "featureName": "Offline Data Caching (Key Read-Only Data)",
+            "description": "Caches essential read-only data for offline viewing by clinic staff and patients.",
+            "userStories": [
+              "As a Nurse in an area with poor internet, I want to be able to view today's appointments and recently accessed patient summaries even when offline."
+            ],
+            "acceptanceCriteria": [
+              "Clinic staff: Today's/this week's appointment schedule is cached.",
+              "Clinic staff: Profiles & recent visit summaries of patients accessed recently (e.g., last X patients or those with appointments today) are cached.",
+              "Patient portal: User's own medical summary and upcoming appointments are cached.",
+              "Clear indication when viewing cached/offline data."
+            ],
+            "keyDataElements": ["Appointments", "Patient Demographics", "Visit Summaries"],
+            "uiUxConsiderations": "Automatic caching where appropriate. Manual refresh option. Clear offline indicators.",
+            "openMRSIntegrationNotes": "Implemented in the frontend application using browser storage (IndexedDB, localStorage). Data fetched via OpenMRS APIs when online.",
+            "researchLinks": ["Clinic Efficiency (Offline)", "Digital Health Equity (Accessibility)"]
+          },
+          {
+            "featureID": "OF-002",
+            "featureName": "Offline Data Entry & Queuing",
+            "description": "Allows creation/editing of key records (patient registration, consultation notes, appointment booking, referral drafts) offline.",
+            "userStories": [
+              "As a Nurse conducting outreach, I want to register a new patient on my tablet even without internet, and have the data sync when I return to the clinic."
+            ],
+            "acceptanceCriteria": [
+              "Specified forms (Patient Reg, Consultation, Appointment, Referral Draft) can be completed and saved locally when offline.",
+              "Queued data is clearly marked as 'Pending Sync'.",
+              "System attempts to sync queued data automatically when connectivity is restored.",
+              "Manual sync trigger option.",
+              "Conflict resolution strategy (MVP: 'last write wins' or flag for manual review - to be defined)."
+            ],
+            "keyDataElements": ["Locally Stored Records", "Sync Status", "Timestamps"],
+            "uiUxConsiderations": "Persistent offline queue visible to user. Clear success/failure messages for sync attempts. Robust error handling for sync failures.",
+            "openMRSIntegrationNotes": "Frontend stores data locally. Upon reconnection, submits data via OpenMRS REST APIs. Requires careful handling of unique IDs generated offline vs. server-side, and potential data conflicts.",
+            "researchLinks": ["Clinic Efficiency (Offline)", "Digital Health Equity (Accessibility)"]
+          }
+        ]
+      },
+      {
+        "moduleName": "Reporting & Dashboards",
+        "features": [
+          {
+            "featureID": "RD-001",
+            "featureName": "Provider Dashboard (MVP)",
+            "description": "Central hub for doctors and nurses to view their daily schedule and access key patient information quickly.",
+            "userStories": [
+              "As a Doctor, when I log in, I want to see my list of appointments for today with patient names and appointment times so I can prepare efficiently.",
+              "As a Nurse, I want to see a list of all patients scheduled for the clinic today to manage patient flow."
+            ],
+            "acceptanceCriteria": [
+              "Displays a list of today's appointments for the logged-in provider (if Doctor/Nurse) or for the whole clinic (if Nurse with wider access/Admin).",
+              "Includes Patient Name, Appointment Time, Appointment Type.",
+              "Quick link from appointment to patient profile/start consultation.",
+              "Placeholder for 'New Messages/Alerts' indicator."
+            ],
+            "keyDataElements": ["Appointments (Date, Time, Patient, Type)", "Provider Schedule"],
+            "uiUxConsiderations": "Clean, prioritized list. Easily scannable. Optimized for quick overview. Offline viewable for today's schedule.",
+            "openMRSIntegrationNotes": "Data fetched from OpenMRS Appointment Scheduling and Patient modules via REST APIs.",
+            "researchLinks": ["MDPI Nurses' Views (Daily Work)", "Clinic Efficiency"]
+          },
+          {
+            "featureID": "RD-002",
+            "featureName": "Clinic Administrator Dashboard (MVP)",
+            "description": "Provides clinic administrators with a basic overview of clinic activity and equity metrics.",
+            "userStories": [
+              "As a Clinic Administrator, I want to see the total number of appointments today and this week to understand clinic load.",
+              "As a Clinic Administrator, I want to see the number of new patients registered this week to monitor clinic growth.",
+              "As a Clinic Administrator, I want to see basic equity metrics like number of patients using SMS vs. voice features (placeholder for data collection)."
+            ],
+            "acceptanceCriteria": [
+              "Displays: Total appointments today/this week.",
+              "Displays: Number of patients seen today/this week.",
+              "Displays: Number of new patients registered this week.",
+              "Placeholder section for 'Equity Metrics' (e.g., SMS vs. Voice reminder usage, patient portal access by language - data collection to be built out)."
+            ],
+            "keyDataElements": ["Appointment Counts", "Patient Registration Counts", "Communication Method Counts (future)"],
+            "uiUxConsiderations": "Simple numerical displays or very basic charts. Focus on 2-3 key operational metrics for MVP.",
+            "openMRSIntegrationNotes": "Data aggregated using OpenMRS Reporting Module (or direct queries via API if simple enough) and displayed in the Umzima UI.",
+            "researchLinks": ["Clinic Efficiency", "Digital Health Equity (Equity Metrics)"]
+          }
+        ]
+      }
+    ],
+    "nonFunctionalRequirementsMVP": [
+      {
+        "category": "Usability",
+        "requirements": [
+          "Interface must be intuitive, requiring minimal training (target <2 hours for core functions).",
+          "Navigation should be clear and consistent.",
+          "Error messages must be user-friendly and actionable.",
+          "Forms should be simple with clear labels and input guidance.",
+          "Support for basic voice input in text fields (leveraging device capabilities).",
+          "Placeholder for voice-guided tutorials."
+        ]
+      },
+      {
+        "category": "Reliability",
+        "requirements": [
+          "Core online functions (patient lookup, appointment view) available 99.5% during clinic operating hours.",
+          "Offline mode for critical data entry (patient reg, consultation) must function reliably.",
+          "Data synchronization must be robust with clear error handling and retry mechanisms."
+        ]
+      },
+      {
+        "category": "Performance",
+        "requirements": [
+          "Page load times for common views < 3 seconds on average clinic hardware with target low-bandwidth connection (e.g., 3G equivalent).",
+          "Patient search results returned < 2 seconds for a typical clinic size (50-500 active patients).",
+          "Offline data saving should be instantaneous."
+        ]
+      },
+      {
+        "category": "Security",
+        "requirements": [
+          "Role-based access control strictly enforced.",
+          "Passwords hashed and salted (handled by OpenMRS).",
+          "Communication with OpenMRS backend via HTTPS.",
+          "Session management with timeouts.",
+          "Basic audit trail for critical actions (e.g., patient record creation/edit, referral creation - OpenMRS provides some audit).",
+          "Consideration for HIPAA principles or relevant local data protection laws."
+        ]
+      },
+      {
+        "category": "Scalability (MVP Focus)",
+        "requirements": [
+          "System should comfortably support a single clinic with 50-500 active patients and 2-5 active staff users concurrently.",
+          "Database structure (OpenMRS) is inherently scalable for patient numbers.",
+          "Architecture should allow for adding more clinics to the network post-MVP."
+        ]
+      },
+      {
+        "category": "Accessibility & Equity (MVP Foundation)",
+        "requirements": [
+          "Interface text at a 7th/8th-grade reading level.",
+          "Good color contrast (WCAG AA as a target for key elements).",
+          "Adjustable font size (basic browser zoom supported, dedicated controls for patient portal).",
+          "SMS as primary patient communication for reach.",
+          "Design considerations for multilingual support (Spanish as first secondary language).",
+          "Placeholders and design for voice-assisted interactions."
+        ]
+      },
+      {
+        "category": "Maintainability",
+        "requirements": [
+          "Code should be well-commented and follow consistent coding standards.",
+          "Modular design for easier updates and bug fixing.",
+          "Clear separation between UI and OpenMRS API interaction logic."
+        ]
+      }
+    ],
+    "dataManagementAndSecurity": {
+      "dataStorage": "All core patient and clinical data stored within the OpenMRS database (MySQL). Local client-side storage (IndexedDB) for offline data.",
+      "dataEncryption": "Data in transit encrypted via HTTPS. Data at rest encryption depends on OpenMRS and database server configuration (recommend enabling).",
+      "backups": "Regular automated backups of the OpenMRS database are critical (responsibility of clinic/hosting provider, Umzima to provide guidance).",
+      "dataAccessAndAudit": "Access controlled by OpenMRS roles and privileges. OpenMRS provides auditing for many data changes; Umzima may add specific audit logs for application-level actions.",
+      "patientConsent": "Mechanisms to record patient consent for SMS communication and data sharing (as part of patient registration or a separate form/process)."
+    },
+    "futureConsiderationsPostMVP": [
+      "Advanced reporting and analytics module.",
+      "Full CHW module with dedicated workflows and offline app.",
+      "Enhanced patient portal with self-scheduling, lab result viewing.",
+      "Telehealth (video/chat) integration.",
+      "Full inter-clinic secure messaging and referral exchange.",
+      "Pharmacy/Medication management (basic e-prescription).",
+      "Inventory management for clinic supplies.",
+      "Expanded multilingual and voice interface capabilities.",
+      "Integration with national health identifiers and other health systems (e.g., labs).",
+      "Automated task prioritization and workflow management.",
+      "Billing and insurance integration (if applicable)."
+    ]
+  }
+}

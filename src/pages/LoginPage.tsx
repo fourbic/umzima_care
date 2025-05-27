@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Logo from '../components/common/Logo';
 import Button from '../components/common/Button';
@@ -176,6 +177,15 @@ const LoginPage = () => {
             <div className="mt-4 text-center text-sm">
               <p className="text-gray-600 dark:text-gray-400">
                 For demo purposes: Use username "admin" and password "Admin123" to log in as an administrator.
+              </p>
+            </div>
+            {/* Terms & Conditions and Privacy Policy Links */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-500">
+                By using Umzima Health, you agree to our
+                <Link to="/terms" className="text-primary-dark hover:text-primary-bright mx-1">Terms & Conditions</Link>
+                and
+                <Link to="/privacy-policy" className="text-primary-dark hover:text-primary-bright mx-1">Privacy Policy</Link>
               </p>
             </div>
           </form>
