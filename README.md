@@ -81,14 +81,6 @@ src/
 - **Efficiency**: Streamlined workflows for common tasks
 - **Modularity**: Component-based architecture for maintainability
 
-## Color Palette
-
-- Primary Dark Blue: `#020532` (Backgrounds, Navigation)
-- Secondary Dark Blue: `#030533` (Accents, Darker UI elements)
-- Primary Bright Green: `#14E323` (Buttons, CTAs, Highlights)
-- Secondary Green: `#74E102` (Secondary Highlights, Icons)
-- Accent Green: `#7FE201` (Subtle Highlights, Status Indicators)
-
 ## Development Notes
 
 - This project is intended to be connected to an OpenMRS backend
