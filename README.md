@@ -1,6 +1,8 @@
-# Umzima v2 - PHC System
+![Alt text](https://github.com/fourbic/umzima_care/blob/main/public/images/umzima_logo_name_dark.jpg "Umzima Logo")
 
-Umzima is a simplified, accessible digital system for core Primary Health Care (PHC) operations for small clinics. This web application provides a modern, user-friendly interface that connects to OpenMRS as the backend system for all data operations.
+Umzima is a simplified, accessible digital system for core Primary Health Care (PHC) operations for small clinics. 
+
+This web application provides a modern, user-friendly interface that connects to OpenMRS as the backend system for all data operations.
 
 ## Features
 
