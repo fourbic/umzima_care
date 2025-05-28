@@ -8,6 +8,13 @@ import AppointmentsPage from './pages/AppointmentsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
 
+/**
+ * Defines the application's routing structure, including public and protected routes, within an authentication context.
+ *
+ * Public routes include login, privacy policy, and terms pages. Protected routes require authentication and include dashboard, patient management, and appointments. Unmatched or root paths redirect to the dashboard.
+ *
+ * @returns The application's main routing component wrapped in an authentication provider.
+ */
 function App() {
   return (
     <AuthProvider>
