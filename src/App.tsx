@@ -5,6 +5,8 @@ import DashboardPage from './pages/DashboardPage';
 import PatientListPage from './pages/PatientListPage';
 import PatientRegistrationPage from './pages/PatientRegistrationPage';
 import AppointmentsPage from './pages/AppointmentsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsAndConditionsPage />} />
         
         {/* Protected routes */}
         <Route path="/dashboard" element={<DashboardPage />} />
