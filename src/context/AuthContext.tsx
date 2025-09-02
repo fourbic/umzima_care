@@ -30,12 +30,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in and validate session
     const checkAuth = async () => {
       try {
         const currentUser = openMRSAPI.getCurrentUser();
         if (currentUser) {
-          setUser(currentUser);
+          // Validate the session with OpenMRS by making a simple API call
+          try {
+            await openMRSAPI.getPatients(); // Simple validation call
+            setUser(currentUser);
+          } catch (apiError) {
+            console.warn('Session validation failed, clearing stored user data:', apiError);
+            // Clear invalid session data
+            openMRSAPI.logout();
+          }
         }
       } catch (error) {
         console.error('Error checking authentication:', error);

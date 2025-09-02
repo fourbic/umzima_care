@@ -12,4 +12,16 @@ export default defineConfig({
       external: ['lucide-react/dist/esm/icons/fingerprint.js'],
     },
   },
+  server: {
+    port: 5173,
+    proxy: {
+      // Proxy all /openmrs requests to the gateway
+      '/openmrs': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+      },
+    },
+  },
 });
