@@ -16,11 +16,22 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        console.log('Fetching dashboard data...');
         const dashboardStats = await openMRSAPI.getDashboardStats();
+        console.log('Dashboard stats received:', dashboardStats);
         setStats(dashboardStats);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
+        // Check if it's an authentication error
+        if (err.message?.includes('Authentication') || err.message?.includes('401') || err.message?.includes('403')) {
+          setError('Your session has expired. Please log in again.');
+          // Clear invalid session and redirect to login
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+        } else {
+          setError('Failed to load dashboard data. Please check your connection.');
+        }
       } finally {
         setLoading(false);
       }
@@ -33,20 +44,45 @@ const DashboardPage = () => {
     return (
       <AuthenticatedLayout>
         <div className="flex h-full items-center justify-center">
-          <div className="text-center">
-            <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{error}</p>
-            <Button 
-              variant="primary" 
-              className="mt-4" 
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </Button>
+          <div className="text-center max-w-md">
+            <p className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">{error}</p>
+            {error.includes('session has expired') ? (
+              <div className="space-y-3">
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Log In Again
+                </Button>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  You'll be redirected automatically in a few seconds...
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Back to Login
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </AuthenticatedLayout>
     );
   }
+
+  // Debug information
+  console.log('Dashboard render state:', { loading, error, stats, user });
 
   return (
     <AuthenticatedLayout>

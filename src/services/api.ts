@@ -8,11 +8,10 @@ import { User, Patient, Appointment, Consultation, DashboardStats } from '../typ
 class OpenMRSAPI {
   private api: AxiosInstance;
   private user: User | null = null;
-  private mockMode: boolean = true; // Set to true for development without OpenMRS server
 
   constructor() {
-    // This would be set to the actual OpenMRS REST API endpoint
-    const baseURL = import.meta.env.VITE_OPENMRS_API_URL || 'https://demo.openmrs.org/openmrs/ws/rest/v1';
+    // Connect to OpenMRS backend via Vite proxy to avoid CORS in dev
+    const baseURL = import.meta.env.VITE_OPENMRS_API_URL || '/openmrs/ws/rest/v1';
     
     this.api = axios.create({
       baseURL,
@@ -47,60 +46,81 @@ class OpenMRSAPI {
   // Authentication methods
   async login(username: string, password: string): Promise<User> {
     try {
-      if (this.mockMode) {
-        // Mock authentication for development without OpenMRS server
-        console.log('Mock login attempt with:', username);
-        
-        // Store credentials for future API calls
-        localStorage.setItem('umzima_username', username);
-        localStorage.setItem('umzima_password', password);
-        
-        // Create a mock user
-        const user: User = {
-          id: 'mock-user-id',
-          name: username === 'admin' ? 'Administrator' : 'Test User',
-          email: `${username}@example.com`,
-          role: username === 'admin' ? 'admin' : username === 'doctor' ? 'doctor' : 'nurse',
-          avatar: '/assets/default-avatar.png',
-        };
-        
-        // Store user data
-        localStorage.setItem('umzima_user', JSON.stringify(user));
-        
-        this.user = user;
-        return user;
-      } else {
-        // Real OpenMRS authentication
-        console.log('Login attempt with:', username);
-        
-        // Store credentials for future API calls
-        localStorage.setItem('umzima_username', username);
-        localStorage.setItem('umzima_password', password);
-        
-        // OpenMRS REST API uses Basic Auth for authentication
-        const response = await this.api.get('/session');
-        
-        // Extract user data from the response
+      console.log('OpenMRS login attempt with:', username);
+
+      // Store credentials for future API calls
+      localStorage.setItem('umzima_username', username);
+      localStorage.setItem('umzima_password', password);
+
+      // Create Basic Auth header
+      const authHeader = 'Basic ' + btoa(`${username}:${password}`);
+
+      try {
+        // Try GET method with Basic Auth first (simpler approach)
+        const response = await this.api.get('/session', {
+          headers: {
+            'Authorization': authHeader,
+            'Content-Type': 'application/json'
+          }
+        });
+
         const userData = response.data;
-        
+
         if (!userData.authenticated) {
-          throw new Error('Authentication failed');
+          throw new Error('Authentication failed - invalid credentials');
         }
-        
-        // OpenMRS session would return user details that we'd map to our User type
+
+        // Create user object from OpenMRS response
         const user: User = {
-          id: userData.user.uuid,
-          name: `${userData.user.display || 'OpenMRS User'}`,
-          email: username, // OpenMRS might not have email directly
-          role: this.mapOpenMRSRoleToUmzima(userData.user.roles || []),
+          id: userData.user?.uuid || `user-${Date.now()}`,
+          name: userData.user?.display || username,
+          email: `${username}@umzima.local`,
+          role: this.mapOpenMRSRoleToUmzima(userData.user?.roles || []),
           avatar: '/assets/default-avatar.png',
         };
-        
+
         // Store user data
         localStorage.setItem('umzima_user', JSON.stringify(user));
-        
+
         this.user = user;
+        console.log('Login successful for user:', user.name);
         return user;
+
+      } catch (apiError: any) {
+        console.error('OpenMRS API authentication failed:', apiError);
+
+        // If GET fails, try POST method as fallback
+        try {
+          console.log('Trying POST authentication method...');
+          const postResponse = await this.api.post('/session', {
+            username: username,
+            password: password
+          }, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (postResponse.data.authenticated) {
+            const userData = postResponse.data;
+            const user: User = {
+              id: userData.user?.uuid || `user-${Date.now()}`,
+              name: userData.user?.display || username,
+              email: `${username}@umzima.local`,
+              role: this.mapOpenMRSRoleToUmzima(userData.user?.roles || []),
+              avatar: '/assets/default-avatar.png',
+            };
+
+            localStorage.setItem('umzima_user', JSON.stringify(user));
+            this.user = user;
+            console.log('Login successful for user:', user.name);
+            return user;
+          }
+        } catch (postError) {
+          console.error('POST authentication also failed:', postError);
+        }
+
+        throw new Error('Authentication failed. Please check your OpenMRS credentials and ensure the server is running.');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -114,14 +134,12 @@ class OpenMRSAPI {
     localStorage.removeItem('umzima_password');
     localStorage.removeItem('umzima_user');
     this.user = null;
-    
-    if (!this.mockMode) {
-      // Call the OpenMRS logout endpoint
-      try {
-        this.api.delete('/session');
-      } catch (error) {
-        console.error('Logout error:', error);
-      }
+
+    // Call the OpenMRS logout endpoint
+    try {
+      this.api.delete('/session');
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   }
 
@@ -143,87 +161,87 @@ class OpenMRSAPI {
   // Patient methods
   async getPatients(searchTerm?: string): Promise<Patient[]> {
     try {
-      if (this.mockMode) {
-        // Return mock patient data
-        return this.getMockPatients(searchTerm);
+      console.log('Fetching patients from OpenMRS...');
+      
+      // Strategy 1: Try to get patients through appointments (most reliable)
+      try {
+        const appointmentResponse = await this.api.get('/appointment/all');
+        console.log(`Found ${appointmentResponse.data.length} appointments`);
+
+        // Extract unique patients from appointments
+        const patientMap = new Map();
+        const appointmentData = Array.isArray(appointmentResponse.data) ? appointmentResponse.data : [appointmentResponse.data];
+
+        for (const appointment of appointmentData) {
+          if (appointment.patient && !patientMap.has(appointment.patient.uuid)) {
+            patientMap.set(appointment.patient.uuid, appointment.patient);
+          }
+
+          // Limit to requested number
+          if (patientMap.size >= 50) break;
+        }
+
+        console.log(`Extracted ${patientMap.size} unique patients from appointments`);
+
+        // Convert appointment patient data to our format
+        const patients = Array.from(patientMap.values()).map(patientData => {
+          return this.mapOpenMRSPatientFromAppointment(patientData);
+        });
+
+        // Filter by search term if provided
+        if (searchTerm) {
+          return patients.filter(patient => 
+            patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            patient.contactNumber.includes(searchTerm)
+          );
+        }
+
+        return patients;
+      } catch (appointmentError) {
+        console.warn('Could not fetch patients through appointments:', appointmentError);
       }
-      
-      // OpenMRS endpoint would be something like /patient with query params
-      const response = await this.api.get('/patient', {
-        params: {
-          q: searchTerm,
-          v: 'full',
-        },
-      });
-      
-      // Map OpenMRS patients to our Patient type
-      return response.data.results.map(this.mapOpenMRSPatientToUmzima);
+
+      // Strategy 2: Try direct patient endpoint with different parameters
+      try {
+        const params: any = {
+          limit: 50
+        };
+
+        if (searchTerm) {
+          params.q = searchTerm;
+        }
+
+        const response = await this.api.get('/patient', { params });
+        
+        if (response.data.results && response.data.results.length > 0) {
+          const patients = Array.isArray(response.data.results) ? response.data.results : [response.data];
+          return patients.map(this.mapOpenMRSPatientToUmzima);
+        }
+      } catch (patientError) {
+        console.warn('Direct patient endpoint failed:', patientError);
+      }
+
+      // Strategy 3: Try person endpoint (fallback)
+      try {
+        const response = await this.api.get('/person', { params: { limit: 50 } });
+        
+        if (response.data.results && response.data.results.length > 0) {
+          const persons = Array.isArray(response.data.results) ? response.data.results : [response.data];
+          return persons.map(this.mapOpenMRSPersonToUmzima);
+        }
+      } catch (personError) {
+        console.warn('Person endpoint failed:', personError);
+      }
+
+      console.warn('All patient fetching strategies failed, returning empty array');
+      return [];
     } catch (error) {
-      console.error('Error fetching patients:', error);
-      if (this.mockMode) {
-        return this.getMockPatients(searchTerm);
-      }
-      throw new Error('Failed to fetch patients');
+      console.error('Error fetching patients from OpenMRS:', error);
+      throw new Error('Failed to fetch patients from OpenMRS API. Please check your connection and try again.');
     }
   }
   
-  // Helper method to generate mock patient data
-  private getMockPatients(searchTerm?: string): Patient[] {
-    const mockPatients: Patient[] = [
-      {
-        id: 'patient-001',
-        name: 'John Doe',
-        gender: 'male',
-        dateOfBirth: '1985-05-15',
-        contactNumber: '+1234567890',
-        address: '123 Main St, Anytown',
-        registrationDate: '2023-01-15',
-        emergencyContact: {
-          name: 'Jane Doe',
-          relationship: 'Spouse',
-          contactNumber: '+1987654321'
-        },
-        medicalHistory: {
-          allergies: ['Penicillin'],
-          chronicConditions: ['Hypertension'],
-          medications: ['Lisinopril']
-        }
-      },
-      {
-        id: 'patient-002',
-        name: 'Mary Smith',
-        gender: 'female',
-        dateOfBirth: '1990-08-22',
-        contactNumber: '+2345678901',
-        address: '456 Oak Ave, Somewhere',
-        registrationDate: '2023-02-20',
-        medicalHistory: {
-          allergies: [],
-          chronicConditions: ['Diabetes'],
-          medications: ['Metformin']
-        }
-      },
-      {
-        id: 'patient-003',
-        name: 'Robert Johnson',
-        gender: 'male',
-        dateOfBirth: '1975-12-10',
-        contactNumber: '+3456789012',
-        address: '789 Pine St, Nowhere',
-        registrationDate: '2023-03-05'
-      }
-    ];
-    
-    if (!searchTerm) {
-      return mockPatients;
-    }
-    
-    const term = searchTerm.toLowerCase();
-    return mockPatients.filter(patient => 
-      patient.name.toLowerCase().includes(term) || 
-      patient.contactNumber.includes(term)
-    );
-  }
+
 
   async getPatientById(id: string): Promise<Patient> {
     try {
@@ -252,102 +270,46 @@ class OpenMRSAPI {
   // Appointment methods
   async getAppointments(params?: { date?: string, doctorId?: string, patientId?: string }): Promise<Appointment[]> {
     try {
-      if (this.mockMode) {
-        // Return mock appointment data
-        return this.getMockAppointments(params);
+      
+      // OpenMRS appointment endpoint - use /appointment/all since date filtering doesn't work
+      const response = await this.api.get('/appointment/all');
+
+      // Filter appointments based on provided parameters
+      let filteredAppointments = response.data;
+
+      if (params?.date) {
+        // Filter by appointment date
+        const targetDate = new Date(params.date).toISOString().split('T')[0];
+        filteredAppointments = filteredAppointments.filter((apt: any) => {
+          const aptDate = new Date(apt.startDateTime).toISOString().split('T')[0];
+          return aptDate === targetDate;
+        });
       }
-      
-      // OpenMRS would have an appointment module with endpoints
-      const response = await this.api.get('/appointmentscheduling/appointment', {
-        params
-      });
-      
-      return response.data.results.map(this.mapOpenMRSAppointmentToUmzima);
+
+      if (params?.doctorId) {
+        // Filter by provider
+        filteredAppointments = filteredAppointments.filter((apt: any) => {
+          return apt.providers?.some((provider: any) => provider.uuid === params.doctorId);
+        });
+      }
+
+      if (params?.patientId) {
+        // Filter by patient
+        filteredAppointments = filteredAppointments.filter((apt: any) => {
+          return apt.patient?.uuid === params.patientId;
+        });
+      }
+
+      // Handle both single appointment and list responses
+      const appointmentList = Array.isArray(filteredAppointments) ? filteredAppointments : [filteredAppointments];
+      return appointmentList.map((appointment) => this.mapOpenMRSAppointmentToUmzima(appointment));
     } catch (error) {
-      console.error('Error fetching appointments:', error);
-      if (this.mockMode) {
-        return this.getMockAppointments(params);
-      }
-      throw new Error('Failed to fetch appointments');
+      console.error('Error fetching appointments from OpenMRS:', error);
+      throw new Error('Failed to fetch appointments from OpenMRS API. Please check your connection and try again.');
     }
   }
   
-  // Helper method to generate mock appointment data
-  private getMockAppointments(params?: { date?: string, doctorId?: string, patientId?: string }): Appointment[] {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    
-    const mockAppointments: Appointment[] = [
-      {
-        id: 'appt-001',
-        patientId: 'patient-001',
-        patientName: 'John Doe',
-        doctorId: 'doctor-001',
-        doctorName: 'Dr. Sarah Johnson',
-        date: today,
-        time: '09:00',
-        duration: 30,
-        status: 'scheduled',
-        type: 'checkup',
-        reason: 'Annual physical examination'
-      },
-      {
-        id: 'appt-002',
-        patientId: 'patient-002',
-        patientName: 'Mary Smith',
-        doctorId: 'doctor-001',
-        doctorName: 'Dr. Sarah Johnson',
-        date: today,
-        time: '10:00',
-        duration: 30,
-        status: 'scheduled',
-        type: 'follow-up',
-        reason: 'Diabetes follow-up'
-      },
-      {
-        id: 'appt-003',
-        patientId: 'patient-003',
-        patientName: 'Robert Johnson',
-        doctorId: 'doctor-002',
-        doctorName: 'Dr. Michael Brown',
-        date: today,
-        time: '14:00',
-        duration: 45,
-        status: 'scheduled',
-        type: 'new-consultation',
-        reason: 'Chest pain'
-      },
-      {
-        id: 'appt-004',
-        patientId: 'patient-001',
-        patientName: 'John Doe',
-        doctorId: 'doctor-002',
-        doctorName: 'Dr. Michael Brown',
-        date: tomorrowStr,
-        time: '11:00',
-        duration: 30,
-        status: 'scheduled',
-        type: 'follow-up',
-        reason: 'Blood pressure check'
-      }
-    ];
-    
-    // Filter by params if provided
-    return mockAppointments.filter(appointment => {
-      if (params?.date && appointment.date !== params.date) {
-        return false;
-      }
-      if (params?.doctorId && appointment.doctorId !== params.doctorId) {
-        return false;
-      }
-      if (params?.patientId && appointment.patientId !== params.patientId) {
-        return false;
-      }
-      return true;
-    });
-  }
+
 
   async scheduleAppointment(appointment: Omit<Appointment, 'id'>): Promise<Appointment> {
     try {
@@ -387,7 +349,7 @@ class OpenMRSAPI {
         }
       });
       
-      return response.data.results.map(this.mapOpenMRSEncounterToUmzima);
+      return response.data.results.map((encounter: any) => this.mapOpenMRSEncounterToUmzima(encounter));
     } catch (error) {
       console.error(`Error fetching consultations for patient ${patientId}:`, error);
       throw new Error('Failed to fetch consultation records');
@@ -397,44 +359,71 @@ class OpenMRSAPI {
   // Dashboard methods
   async getDashboardStats(): Promise<DashboardStats> {
     try {
+      console.log('Fetching dashboard stats from OpenMRS...');
+      
       // Get today's date
       const today = new Date().toISOString().split('T')[0];
       
-      // Get appointments for today
-      const appointmentsResponse = await this.getAppointments({ date: today });
+      // Get all appointments from OpenMRS
+      const allAppointments = await this.getAppointments();
+      console.log(`Total appointments found: ${allAppointments.length}`);
       
-      // Generate dashboard stats
+      // Get all patients
+      const allPatients = await this.getPatients();
+      console.log(`Total patients found: ${allPatients.length}`);
+      
+      // Filter appointments for today
+      const appointmentsToday = allAppointments.filter(apt => {
+        const aptDate = new Date(apt.date).toISOString().split('T')[0];
+        return aptDate === today;
+      });
+      
+      // Calculate stats from real OpenMRS data
+      const completedToday = appointmentsToday.filter(apt => apt.status === 'completed').length;
+      const newPatientsToday = allPatients.filter(p => {
+        const regDate = new Date(p.registrationDate).toISOString().split('T')[0];
+        return regDate === today;
+      }).length;
+      
+      // Calculate weekly stats (last 7 days)
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const weekAgoStr = weekAgo.toISOString().split('T')[0];
+      
+      const appointmentsThisWeek = allAppointments.filter(apt => {
+        const aptDate = new Date(apt.date).toISOString().split('T')[0];
+        return aptDate >= weekAgoStr && aptDate <= today;
+      }).length;
+      
+      const newPatientsThisWeek = allPatients.filter(p => {
+        const regDate = new Date(p.registrationDate).toISOString().split('T')[0];
+        return regDate >= weekAgoStr && regDate <= today;
+      }).length;
+      
+      // Get upcoming appointments (scheduled for future)
+      const upcomingAppointments = allAppointments
+        .filter(apt => apt.status === 'scheduled' && new Date(apt.date) > new Date())
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 5);
+      
+      console.log(`Dashboard stats calculated: ${appointmentsToday.length} appointments today, ${allPatients.length} total patients`);
+      
+      // Generate dashboard stats from real data
       return {
-        appointmentsToday: appointmentsResponse.length,
-        appointmentsThisWeek: this.mockMode ? 12 : appointmentsResponse.length * 5, // Simulated weekly data
-        newPatientsToday: this.mockMode ? 3 : Math.floor(Math.random() * 5),
-        newPatientsThisWeek: this.mockMode ? 15 : Math.floor(Math.random() * 20),
-        completedConsultationsToday: this.mockMode ? 2 : Math.floor(appointmentsResponse.length * 0.7),
-        upcomingAppointments: appointmentsResponse.slice(0, 5),
+        appointmentsToday: appointmentsToday.length,
+        appointmentsThisWeek: appointmentsThisWeek,
+        newPatientsToday: newPatientsToday,
+        newPatientsThisWeek: newPatientsThisWeek,
+        completedConsultationsToday: completedToday,
+        upcomingAppointments: upcomingAppointments,
       };
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      
-      if (this.mockMode) {
-        // Return mock data if there's an error
-        return this.getMockDashboardStats();
-      }
-      
-      throw new Error('Failed to load dashboard statistics');
+      console.error('Error fetching dashboard stats from OpenMRS:', error);
+      throw new Error('Failed to fetch dashboard statistics from OpenMRS API. Please check your connection and try again.');
     }
   }
   
-  // Helper method to generate mock dashboard stats
-  private getMockDashboardStats(): DashboardStats {
-    return {
-      appointmentsToday: 3,
-      appointmentsThisWeek: 12,
-      newPatientsToday: 2,
-      newPatientsThisWeek: 8,
-      completedConsultationsToday: 1,
-      upcomingAppointments: this.getMockAppointments().slice(0, 3),
-    };
-  }
+
 
   // Helper methods for mapping between Umzima and OpenMRS data models
   private mapOpenMRSRoleToUmzima(roles: any[]): User['role'] {
@@ -456,6 +445,33 @@ class OpenMRSAPI {
         `${patient.person.addresses[0].address1}, ${patient.person.addresses[0].cityVillage}` : '',
       registrationDate: patient.auditInfo?.dateCreated || new Date().toISOString(),
       // Other fields would be mapped from the right OpenMRS properties
+    };
+  }
+
+  private mapOpenMRSPatientFromAppointment(patientData: any): Patient {
+    // Map patient data from appointment response
+    return {
+      id: patientData.uuid,
+      name: patientData.display || patientData.name || 'Unknown Patient',
+      gender: patientData.gender?.toLowerCase() || 'unknown',
+      dateOfBirth: patientData.birthdate || new Date().toISOString(),
+      contactNumber: patientData.phoneNumber || patientData.contactNumber || '',
+      address: patientData.address || '',
+      registrationDate: patientData.dateCreated || new Date().toISOString(),
+    };
+  }
+
+  private mapOpenMRSPersonToUmzima(person: any): Patient {
+    // Map person data to patient format
+    return {
+      id: person.uuid,
+      name: person.display || `${person.names?.[0]?.givenName || ''} ${person.names?.[0]?.familyName || ''}`.trim(),
+      gender: person.gender?.toLowerCase() || 'unknown',
+      dateOfBirth: person.birthdate,
+      contactNumber: person.attributes?.find((a: any) => a.attributeType?.display === 'Phone Number')?.value || '',
+      address: person.addresses?.[0] ? 
+        `${person.addresses[0].address1 || ''}, ${person.addresses[0].cityVillage || ''}`.trim() : '',
+      registrationDate: person.auditInfo?.dateCreated || new Date().toISOString(),
     };
   }
 
@@ -489,19 +505,28 @@ class OpenMRSAPI {
   }
 
   private mapOpenMRSAppointmentToUmzima(appointment: any): Appointment {
-    // Simplified mapping
+    // Handle the structure returned by /appointment/all endpoint
+    const startDateTime = new Date(appointment.startDateTime);
+    const endDateTime = new Date(appointment.endDateTime);
+
+    // Calculate duration in minutes
+    const duration = Math.round((endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60));
+
+    // Get the first provider (doctor)
+    const primaryProvider = appointment.providers?.[0] || appointment.provider;
+
     return {
       id: appointment.uuid,
-      patientId: appointment.patient.uuid,
-      patientName: appointment.patient.display,
-      doctorId: appointment.provider.uuid,
-      doctorName: appointment.provider.display,
-      date: appointment.timeSlot.startDate.split('T')[0],
-      time: appointment.timeSlot.startDate.split('T')[1].substring(0, 5),
-      duration: 30, // Default duration
+      patientId: appointment.patient?.uuid || '',
+      patientName: appointment.patient?.display || appointment.patient?.name || 'Unknown Patient',
+      doctorId: primaryProvider?.uuid || '',
+      doctorName: primaryProvider?.display || primaryProvider?.name || 'Unknown Doctor',
+      date: startDateTime.toISOString().split('T')[0],
+      time: startDateTime.toTimeString().substring(0, 5),
+      duration: duration,
       status: this.mapOpenMRSStatusToUmzima(appointment.status),
-      type: this.mapOpenMRSAppointmentTypeToUmzima(appointment.appointmentType.display),
-      reason: appointment.reason || '',
+      type: this.mapOpenMRSAppointmentTypeToUmzima(appointment.service?.name || 'General'),
+      reason: appointment.comments || appointment.additionalInfo || '',
     };
   }
 
